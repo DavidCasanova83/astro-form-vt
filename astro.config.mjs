@@ -13,6 +13,5 @@ export default defineConfig({
 	vite: {
     plugins: [tailwindcss()],
   },
-	output: 'server', // Nécessaire pour le SSR
   adapter: vercel(),
 });
