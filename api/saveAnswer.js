@@ -23,7 +23,6 @@ export default async function handler(req, res) {
     const item = {
       primaire: uuidv4(), // Clé primaire unique
       ...data,
-      formulaire: 'toulon',  // Ajoute le champ "formulaire"
       timestamp: new Date().toISOString(),
     };
     console.log("Item à insérer :", item);
