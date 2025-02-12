@@ -1,6 +1,13 @@
 // api/saveAnswer.js
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { v4 as uuidv4 } from "uuid";
 
-// Vercel attend une fonction handler exportée par défaut.
+// Crée le client DynamoDB
+const REGION = process.env.AWS_REGION; // ex: "us-east-1"
+const client = new DynamoDBClient({ region: REGION });
+const ddbDocClient = DynamoDBDocumentClient.from(client);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ message: 'Method Not Allowed' });
@@ -8,24 +15,28 @@ export default async function handler(req, res) {
   }
   
   try {
-    // On suppose que les données sont envoyées en JSON.
-    const data = req.body;
-
-    // Ici, tu ajoutes ta logique pour sauvegarder les données.
-    // Attention : Le filesystem des fonctions serverless sur Vercel est éphémère.
-    // Pour un stockage persistant, il faudrait utiliser une base de données ou un service KV.
-
-    // Exemple de réponse (en ajoutant la propriété "formulaire": "toulon")
-    const result = {
+    // Récupère les données envoyées par le client
+    const data = req.body; // Attendu en JSON
+    // Prépare l'objet à insérer
+    const item = {
+      id: uuidv4(), // Génère un identifiant unique
       ...data,
       formulaire: 'toulon',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    // Pour cet exemple, on ne va pas réellement écrire dans un fichier.
-    // On renvoie simplement la réponse.
-    res.status(200).json({ success: true, data: result });
+    // Prépare la commande Put pour DynamoDB
+    const command = new PutCommand({
+      TableName: process.env.DYNAMODB_TABLE, // Nom de la table, défini dans Vercel
+      Item: item,
+    });
+
+    // Exécute la commande pour sauvegarder l'item dans DynamoDB
+    await ddbDocClient.send(command);
+
+    res.status(200).json({ success: true, data: item });
   } catch (error) {
+    console.error("Erreur DynamoDB :", error);
     res.status(500).json({ success: false, error: error.message });
   }
 }
