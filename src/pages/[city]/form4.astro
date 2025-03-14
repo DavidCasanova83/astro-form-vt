@@ -1,0 +1,133 @@
+---
+import Header from '../../components/Header.astro';
+import "../../styles/global.css";
+import cities from '../../data/cities.json'; // 🔥 Import des villes dynamiques
+
+// Astro doit savoir quelles pages générer avant le build
+export async function getStaticPaths() {
+  return cities.map(city => ({ params: { city } }));
+}
+---
+
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Formulaire Étape 4</title> <!-- 🔥 Valeur par défaut -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <Header />
+    <main class="container mx-auto p-4 max-w-lg"
+        x-init="
+            city = window.location.pathname.split('/')[1]; 
+            document.title = 'Formulaire - ' + city + ' - Étape 4';
+            formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}');
+            $watch('formAnswers', value => localStorage.setItem('formAnswers', JSON.stringify(value)))
+        "
+        x-data="{ 
+            city: '',  
+            specificRequests: [],
+            generalRequests: [],
+            otherRequest: '',
+            formAnswers: {},
+            specificOptions: {
+                'annot': ['Escalade', 'Train à Vapeur', 'Grès d’Annot'],
+                'colmars-les-alpes': ['À définir'],
+                'entrevaux': ['Citadelle', 'Gorge de Daluis', 'Train à Vapeur'],
+                'la-palud-sur-verdon': ['Blanc-Martel', 'Route des Crêtes', 'Escalade et via cordatta'],
+                'saint-andré-les-alpes': ['Lac de Castillon', 'Parapente']
+            },
+            generalOptions: [
+                'Randonnées', 'Patrimoine Culturel', 'Baignade', 'Activité d’eau douce (pédalo, canoë)',
+                'Vélo', 'Autres activités de pleine nature', 'Commerces', 'Restaurants', 
+                'Accès', 'Informations pratiques', 'Hébergements', 'Evènements, animations',
+                'Photocopies ou autre demande d’habitant', 'Partenariat', 'Autres, à préciser…'
+            ]
+        }">
+      
+        <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 4</h1>
+        
+        <!-- Vérification et affichage du bureau -->
+        <p class="text-xl font-semibold mb-2">Bureau détecté : <span class="text-blue-600 font-bold" x-text="city"></span></p>
+
+        <!-- Question 1 : Objet de la demande spécifique -->
+        <template x-if="specificOptions[city]">
+            <div>
+                <p class="text-xl mb-2">Objet de votre demande spécifique à <span class="font-bold" x-text="city"></span> :</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <template x-for="option in specificOptions[city]" :key="option">
+                        <button 
+                            x-on:click="specificRequests.includes(option) ? specificRequests.splice(specificRequests.indexOf(option), 1) : specificRequests.push(option)"
+                            :class="specificRequests.includes(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                            class="px-4 py-2 rounded hover:bg-blue-400">
+                            <span x-text="option"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Question 2 : Objet de la demande générale -->
+        <p class="text-xl mb-2">Objet de votre demande générale :</p>
+        <div class="flex flex-wrap gap-2 mb-4">
+            <template x-for="option in generalOptions" :key="option">
+                <button 
+                    x-on:click="generalRequests.includes(option) ? generalRequests.splice(generalRequests.indexOf(option), 1) : generalRequests.push(option)"
+                    :class="generalRequests.includes(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                    class="px-4 py-2 rounded hover:bg-blue-400">
+                    <span x-text="option"></span>
+                </button>
+            </template>
+        </div>
+
+        <!-- Champ de saisie pour "Autres, à préciser..." -->
+        <template x-if="generalRequests.includes('Autres, à préciser…')">
+            <div class="mb-4">
+                <input 
+                    type="text" 
+                    x-model="otherRequest" 
+                    class="border p-2 rounded w-full" 
+                    placeholder="Précisez votre demande...">
+            </div>
+        </template>
+
+        <!-- Bouton de validation -->
+        <button
+            type="button"
+            x-on:click="if(specificRequests.length > 0 || generalRequests.length > 0){ 
+                formAnswers.city = city;
+                formAnswers.specificRequests = specificRequests;
+                formAnswers.generalRequests = generalRequests;
+                if(generalRequests.includes('Autres, à préciser…')) {
+                    formAnswers.otherRequest = otherRequest;
+                }
+                localStorage.setItem('formAnswers', JSON.stringify(formAnswers));
+                console.log('Form4 - Données sauvegardées : ', JSON.parse(localStorage.getItem('formAnswers')));
+
+                // Envoi des données au serveur
+                fetch('/api/saveAnswer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formAnswers)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Réponse du serveur : ', data);
+                    alert('Données enregistrées sur le serveur !');
+
+                    // Redirige vers la page de résumé
+                    window.location.href='/';
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la sauvegarde : ', error);
+                    alert('Erreur lors de la sauvegarde sur le serveur');
+                });
+            } else { 
+                alert('Veuillez sélectionner au moins une demande spécifique ou générale'); 
+            }"
+            class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            Terminer
+        </button>
+    </main>
+</body>
+</html>

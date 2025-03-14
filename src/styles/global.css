@@ -90,12 +90,15 @@ hr {
   border: none;
   border-top: 1px solid rgb(var(--gray-light));
 }
-@media (max-width: 720px) {
-  body {
-    font-size: 18px;
-  }
+@media (max-width: 640px) {
   main {
     padding: 1em;
+    margin: auto;
+    width: 100%;
+    max-width: 400px;
+  }
+  button {
+    width: 100%; /* Pour que les boutons prennent toute la largeur sur mobile */
   }
 }
 
