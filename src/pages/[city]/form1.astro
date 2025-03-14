@@ -1,0 +1,126 @@
+---
+import Header from '../../components/Header.astro';
+import "../../styles/global.css";
+import cities from '../../data/cities.json'; // 🔥 Import des villes dynamiques
+
+// Astro doit savoir quelles pages générer avant le build
+export async function getStaticPaths() {
+  return cities.map(city => ({ params: { city } }));
+}
+---
+
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Formulaire Étape 1</title> <!-- 🔥 Valeur par défaut -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <Header />
+    <main class="container mx-auto p-4 max-w-lg"
+        x-init="
+            city = window.location.pathname.split('/')[1]; 
+            document.title = 'Formulaire - ' + city + ' - Étape 1';
+            formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}');
+            $watch('formAnswers', value => localStorage.setItem('formAnswers', JSON.stringify(value)))
+        "
+        x-data="{ 
+            city: '',  
+            country: 'France', 
+            department: '', 
+            contactMode: 'Accueil physique', 
+            formAnswers: {}, 
+            departments: [
+                '01 - Ain', '02 - Aisne', '03 - Allier', '04 - Alpes-de-Haute-Provence', '05 - Hautes-Alpes',
+                '06 - Alpes-Maritimes', '07 - Ardèche', '08 - Ardennes', '09 - Ariège', '10 - Aube',
+                '11 - Aude', '12 - Aveyron', '13 - Bouches-du-Rhône', '14 - Calvados', '15 - Cantal',
+                '16 - Charente', '17 - Charente-Maritime', '18 - Cher', '19 - Corrèze', '21 - Côte-d\'Or',
+                '22 - Côtes-d\'Armor', '23 - Creuse', '24 - Dordogne', '25 - Doubs', '26 - Drôme',
+                '27 - Eure', '28 - Eure-et-Loir', '29 - Finistère', '30 - Gard', '31 - Haute-Garonne',
+                '32 - Gers', '33 - Gironde', '34 - Hérault', '35 - Ille-et-Vilaine', '36 - Indre',
+                '37 - Indre-et-Loire', '38 - Isère', '39 - Jura', '40 - Landes', '41 - Loir-et-Cher',
+                '42 - Loire', '43 - Haute-Loire', '44 - Loire-Atlantique', '45 - Loiret', '46 - Lot',
+                '47 - Lot-et-Garonne', '48 - Lozère', '49 - Maine-et-Loire', '50 - Manche', '51 - Marne',
+                '52 - Haute-Marne', '53 - Mayenne', '54 - Meurthe-et-Moselle', '55 - Meuse', '56 - Morbihan',
+                '57 - Moselle', '58 - Nièvre', '59 - Nord', '60 - Oise', '61 - Orne',
+                '62 - Pas-de-Calais', '63 - Puy-de-Dôme', '64 - Pyrénées-Atlantiques', '65 - Hautes-Pyrénées',
+                '66 - Pyrénées-Orientales', '67 - Bas-Rhin', '68 - Haut-Rhin', '69 - Rhône', '70 - Haute-Saône',
+                '71 - Saône-et-Loire', '72 - Sarthe', '73 - Savoie', '74 - Haute-Savoie', '75 - Paris',
+                '76 - Seine-Maritime', '77 - Seine-et-Marne', '78 - Yvelines', '79 - Deux-Sèvres',
+                '80 - Somme', '81 - Tarn', '82 - Tarn-et-Garonne', '83 - Var', '84 - Vaucluse',
+                '85 - Vendée', '86 - Vienne', '87 - Haute-Vienne', '88 - Vosges', '89 - Yonne',
+                '90 - Territoire de Belfort', '91 - Essonne', '92 - Hauts-de-Seine', '93 - Seine-Saint-Denis',
+                '94 - Val-de-Marne', '95 - Val-d\'Oise'
+            ]
+        }">
+      
+        <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 1</h1>
+      
+        <!-- Question 1 : Pays de résidence -->
+        <p class="text-xl mb-4">Quel est votre pays de résidence ?</p>
+        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
+            <template x-for="option in ['France', 'Angleterre', 'Allemagne']">
+                <button 
+                    type="button"
+                    x-on:click="country = option"
+                    :class="country === option ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+                    <span x-text="option"></span>
+                </button>
+            </template>
+        </div>
+
+        <!-- Question 2 : Sélection du département (uniquement si France est sélectionné) -->
+        <template x-if="country === 'France'">
+            <div>
+                <p class="text-xl mb-2">Dans quel département résidez-vous ?</p>
+                <input 
+                    type="text"
+                    x-model="department"
+                    list="departmentsList"
+                    class="border p-2 rounded w-full mb-4"
+                    placeholder="Commencez à taper votre département...">
+                <datalist id="departmentsList">
+                    <template x-for="dept in departments" :key="dept">
+                        <option x-text="dept"></option>
+                    </template>
+                </datalist>
+            </div>
+        </template>
+
+        <!-- Question 3 : Mode de contact -->
+        <p class="text-xl mb-4">La prise de contact est par ?</p>
+        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
+            <template x-for="option in ['Accueil physique', 'Téléphone', 'Mail']">
+                <button 
+                    type="button"
+                    x-on:click="contactMode = option"
+                    :class="contactMode === option ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+                    <span x-text="option"></span>
+                </button>
+            </template>
+        </div>
+      
+        <!-- Bouton de validation -->
+        <button
+            type="button"
+            x-on:click="if(country && contactMode && (country !== 'France' || department)){ 
+                formAnswers.city = city;
+                formAnswers.country = country;
+                formAnswers.contactMode = contactMode;
+                if (country === 'France') formAnswers.department = department;
+                localStorage.setItem('formAnswers', JSON.stringify(formAnswers));
+                console.log('Form1 - Données sauvegardées : ', JSON.parse(localStorage.getItem('formAnswers')));
+
+                // Redirige vers l'étape 2 en conservant la ville dans l'URL
+                window.location.href = '/' + city + '/form2';
+            } else { 
+                alert('Veuillez sélectionner un pays, un mode de contact et un département si vous êtes en France.');
+            }"
+            class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            Valider
+        </button>
+    </main>
+</body>
+</html>

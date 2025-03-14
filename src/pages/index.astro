@@ -6,7 +6,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import "../styles/global.css";
 
 const locations = [
-  { name: "Toulon", slug: "toulon" },
   { name: "La Palud-sur-Verdon", slug: "la-palud-sur-verdon" },
   { name: "Saint-André-les-Alpes", slug: "saint-andre-les-alpes" },
   { name: "Colmars-les-Alpes", slug: "colmars-les-alpes" },
@@ -32,21 +31,19 @@ const locations = [
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-6 place-items-center w-fit mx-auto">
 				{locations.map(({ name, slug }) => (
 						<a href={`/${slug}/form1`} 
-								class="max-w-[200px] min-h-[250px] w-full bg-cover bg-center relative rounded-lg shadow-lg 
+								class="min-w-[250px] min-h-[250px] w-full bg-cover bg-center relative shadow-lg 
 											 hover:shadow-xl transition-all duration-300 flex flex-col justify-between items-center text-center
-											 border border-gray-200 p-4"
+											 border border-gray-200 p-4 hover:border-emerald-600 hover:border-8"
 								style={{ backgroundImage: `url('../images/${slug}.jpg')` }}>
 								
 								<!-- Overlay pour améliorer la lisibilité -->
-								<div class="absolute inset-0 bg-black/50 rounded-lg"></div>
+								<div class="absolute inset-0 bg-black/50"></div>
 		
 								<!-- Contenu de la carte -->
-								<h2 class="text-xl font-semibold text-white relative z-10">{name}</h2>
-								<span class="mt-auto text-white relative z-10">Accédez au formulaire</span>
+								<h2 class="text-lg font-semibold text-white relative z-10 text-nowrap">{name}</h2>
 						</a>
 				))}
 		</div>		
 		</main>
-		<Footer />
 	</body>
 </html>

@@ -1,0 +1,84 @@
+---
+import Header from '../../components/Header.astro';
+import "../../styles/global.css";
+import cities from '../../data/cities.json'; // 🔥 Import des villes dynamiques
+
+// Astro doit savoir quelles pages générer avant le build
+export async function getStaticPaths() {
+  return cities.map(city => ({ params: { city } }));
+}
+---
+
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Formulaire Étape 2</title> <!-- 🔥 Valeur par défaut -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <Header />
+    <main class="container mx-auto p-4 max-w-lg"
+        x-init="
+            city = window.location.pathname.split('/')[1]; 
+            document.title = 'Formulaire - ' + city + ' - Étape 2';
+            formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}');
+            $watch('formAnswers', value => localStorage.setItem('formAnswers', JSON.stringify(value)))
+        "
+        x-data="{ 
+            city: '',  
+            profile: 'Couple',
+            ageGroups: [],
+            formAnswers: {}  
+        }">
+      
+        <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 2</h1>
+
+        <!-- Question 1 : Profil -->
+        <p class="text-xl mb-4">Quel est votre profil ?</p>
+        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
+            <template x-for="option in ['Seul', 'Couple', 'Famille', 'Groupe d’amis']">
+                <button 
+                    type="button"
+                    x-on:click="profile = option"
+                    :class="profile === option ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+                    <span x-text="option"></span>
+                </button>
+            </template>
+        </div>
+
+        <!-- Question 2 : Tranche d’âge -->
+        <p class="text-xl mb-4">Quelle(s) tranche(s) d’âge vous correspond(ent) ?</p>
+        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
+            <template x-for="option in ['18-25', '25-40', '40-60', '60+']">
+                <button 
+                    type="button"
+                    x-on:click="ageGroups.includes(option) ? ageGroups.splice(ageGroups.indexOf(option), 1) : ageGroups.push(option)"
+                    :class="ageGroups.includes(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+                    <span x-text="option"></span>
+                </button>
+            </template>
+        </div>
+
+        <!-- Bouton de validation -->
+        <button
+            type="button"
+            x-on:click="if(profile && ageGroups.length > 0){ 
+                formAnswers.city = city;
+                formAnswers.profile = profile;
+                formAnswers.ageGroups = ageGroups;
+                localStorage.setItem('formAnswers', JSON.stringify(formAnswers));
+                console.log('Form2 - Données sauvegardées : ', JSON.parse(localStorage.getItem('formAnswers')));
+
+                // Redirige vers l'étape 3 en conservant la ville détectée
+                window.location.href = '/' + city + '/form3';
+            } else { 
+                alert('Veuillez sélectionner un profil et au moins une tranche d’âge'); 
+            }"
+            class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            Valider
+        </button>
+    </main>
+</body>
+</html>
