@@ -117,7 +117,7 @@ export async function getStaticPaths() {
                     alert('Données enregistrées sur le serveur !');
 
                     // Redirige vers la page de résumé
-                    window.location.href='/';
+                    window.location.href='/' + city + '/form1';
                 })
                 .catch(error => {
                     console.error('Erreur lors de la sauvegarde : ', error);
