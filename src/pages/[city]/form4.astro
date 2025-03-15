@@ -41,7 +41,7 @@ export async function getStaticPaths() {
                 'Randonnées', 'Patrimoine Culturel', 'Baignade', 'Activité d’eau douce (pédalo, canoë)',
                 'Vélo', 'Autres activités de pleine nature', 'Commerces', 'Restaurants', 
                 'Accès', 'Informations pratiques', 'Hébergements', 'Evènements, animations',
-                'Photocopies ou autre demande d’habitant', 'Partenariat', 'Autres, à préciser…'
+                'Photocopies ou autre demande d’habitant', 'Partenariat'
             ]
         }">
       
@@ -80,27 +80,28 @@ export async function getStaticPaths() {
             </template>
         </div>
 
-        <!-- Champ de saisie pour "Autres, à préciser..." -->
-        <template x-if="generalRequests.includes('Autres, à préciser…')">
-            <div class="mb-4">
-                <input 
-                    type="text" 
-                    x-model="otherRequest" 
-                    class="border p-2 rounded w-full" 
-                    placeholder="Précisez votre demande...">
-            </div>
-        </template>
+        <!-- Séparateur -->
+        <hr class="my-4 border-t border-gray-300">
+
+        <!-- Champ de saisie pour "Autres, à préciser..." TOUJOURS AFFICHÉ -->
+        <div class="mb-4">
+            <p class="text-lg font-semibold mb-2">Autres, à préciser :</p>
+            <input 
+                type="text" 
+                x-model="otherRequest" 
+                class="border p-2 rounded w-full" 
+                placeholder="Précisez votre demande...">
+        </div>
 
         <!-- Bouton de validation -->
         <button
             type="button"
-            x-on:click="if(specificRequests.length > 0 || generalRequests.length > 0){ 
+            x-on:click="if(specificRequests.length > 0 || generalRequests.length > 0 || otherRequest.trim() !== '') { 
                 formAnswers.city = city;
                 formAnswers.specificRequests = specificRequests;
                 formAnswers.generalRequests = generalRequests;
-                if(generalRequests.includes('Autres, à préciser…')) {
-                    formAnswers.otherRequest = otherRequest;
-                }
+                formAnswers.otherRequest = otherRequest;
+                
                 localStorage.setItem('formAnswers', JSON.stringify(formAnswers));
                 console.log('Form4 - Données sauvegardées : ', JSON.parse(localStorage.getItem('formAnswers')));
 
@@ -123,7 +124,7 @@ export async function getStaticPaths() {
                     alert('Erreur lors de la sauvegarde sur le serveur');
                 });
             } else { 
-                alert('Veuillez sélectionner au moins une demande spécifique ou générale'); 
+                alert('Veuillez sélectionner au moins une demande spécifique, générale ou préciser une autre demande.'); 
             }"
             class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
             Terminer
