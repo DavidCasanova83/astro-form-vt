@@ -36,7 +36,7 @@ export async function getStaticPaths() {
         <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 3</h1>
         
         <!-- Question 1 : Période de séjour -->
-        <p class="text-xl mb-4">À quelle période prévoyez-vous de séjourner ?</p>
+        <p class="text-xl mb-4">Période de séjour :</p>
         <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
             <template x-for="option in ['Hiver', 'Printemps', 'Été', 'Automne', 'Inconnu']">
                 <button 
@@ -50,7 +50,7 @@ export async function getStaticPaths() {
         </div>
 
         <!-- Question 2 : Date de début et de fin (facultatives) -->
-        <p class="text-xl mb-2">Si vous connaissez vos dates, vous pouvez les renseigner :</p>
+        <p class="text-xl mb-2">Dates de séjour, si vous pouvez les renseigner :</p>
         <label class="block mb-2">
             <span class="text-lg">Date de début :</span>
             <input 

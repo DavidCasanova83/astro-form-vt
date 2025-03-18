@@ -54,7 +54,7 @@ export async function getStaticPaths() {
         <!-- Question 1 : Objet de la demande spécifique -->
         <template x-if="specificOptions[city]">
             <div>
-                <p class="text-xl mb-2">Objet de votre demande spécifique à <span class="font-bold" x-text="city"></span> :</p>
+                <p class="text-xl mb-2">Demande spécifique à <span class="font-bold" x-text="city"></span> :</p>
                 <div class="flex flex-wrap gap-2 mb-4">
                     <template x-for="option in specificOptions[city]" :key="option">
                         <button 
@@ -69,7 +69,7 @@ export async function getStaticPaths() {
         </template>
 
         <!-- Question 2 : Objet de la demande générale -->
-        <p class="text-xl mb-2">Objet de votre demande générale :</p>
+        <p class="text-xl mb-2">Demande générale :</p>
         <div class="flex flex-wrap gap-2 mb-4">
             <template x-for="option in generalOptions" :key="option">
                 <button 
