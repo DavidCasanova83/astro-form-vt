@@ -30,6 +30,7 @@ export async function getStaticPaths() {
             country: 'France', 
             otherCountry: '', // Stocke la nationalité personnalisée si 'Autre' est sélectionné
             department: '', 
+            departmentUnknown: false, // Indique si l'utilisateur a sélectionné 'Inconnu'
             contactMode: 'Accueil physique', 
             formAnswers: {}, 
             departments: [
@@ -64,9 +65,9 @@ export async function getStaticPaths() {
         <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 1</h1>
       
         <!-- Question 1 : Pays de résidence -->
-        <p class="text-xl mb-4">Quel est votre pays de résidence ?</p>
+        <p class="text-xl mb-4">Quel est le pays de résidence ?</p>
         <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
-            <template x-for="option in ['France', 'Angleterre', 'Allemagne', 'Autre']">
+            <template x-for="option in ['France', 'Belgique', 'Allemagne', 'Italie', 'Pays-Bas', 'Espagne', 'Angleterre', 'Autre']">
                 <button 
                     type="button"
                     x-on:click="country = option; if(option !== 'Autre') otherCountry = ''"
@@ -80,25 +81,35 @@ export async function getStaticPaths() {
         <!-- Champ pour entrer une nationalité personnalisée si 'Autre' est sélectionné -->
         <template x-if="country === 'Autre'">
             <div class="mb-4">
-                <label class="block text-lg">Veuillez préciser votre nationalité :</label>
+                <label class="block text-lg">Veuillez préciser le pays :</label>
                 <input 
                     type="text" 
                     x-model="otherCountry" 
                     class="border p-2 rounded w-full" 
-                    placeholder="Votre nationalité">
+                    placeholder="Entrez le pays... (ex: Suisse)">
             </div>
         </template>
 
         <!-- Question 2 : Sélection du département (uniquement si France est sélectionné) -->
         <template x-if="country === 'France'">
             <div>
-                <p class="text-xl mb-2">Dans quel département résidez-vous ?</p>
+                <p class="text-xl mb-2">Préciser le département</p>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <button 
+                        type="button"
+                        x-on:click="departmentUnknown = !departmentUnknown; if(departmentUnknown) department = 'Inconnu'; else department = ''"
+                        :class="departmentUnknown ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                        class="px-4 py-2 rounded hover:bg-blue-400">
+                        Inconnu
+                    </button>
+                </div>
                 <input 
                     type="text"
                     x-model="department"
                     list="departmentsList"
                     class="border p-2 rounded w-full mb-4"
-                    placeholder="Commencez à taper votre département...">
+                    placeholder="exemple : 75 - Paris"
+                    :disabled="departmentUnknown">
                 <datalist id="departmentsList">
                     <template x-for="dept in departments" :key="dept">
                         <option x-text="dept"></option>
@@ -110,19 +121,12 @@ export async function getStaticPaths() {
         <!-- Bouton de validation -->
         <button
             type="button"
-            x-on:click="if(country && contactMode && (country !== 'France' || department)){ 
-                formAnswers.city = city;
+            x-on:click="formAnswers.city = city;
                 formAnswers.country = country === 'Autre' ? otherCountry : country;
                 formAnswers.contactMode = contactMode;
                 if (country === 'France') formAnswers.department = department;
                 localStorage.setItem('formAnswers', JSON.stringify(formAnswers));
-                console.log('Form1 - Données sauvegardées : ', JSON.parse(localStorage.getItem('formAnswers')));
-
-                // Redirige vers l'étape 2 en conservant la ville dans l'URL
-                window.location.href = '/' + city + '/form2';
-            } else { 
-                alert('Veuillez remplir tous les champs requis.');
-            }"
+                window.location.href = '/' + city + '/form2';"
             class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
             Valider
         </button>

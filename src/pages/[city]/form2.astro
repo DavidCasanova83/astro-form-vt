@@ -27,45 +27,68 @@ export async function getStaticPaths() {
         "
         x-data="{ 
             city: '',  
-            profile: 'Couple',
+            profile: '', 
+            profileUnknown: false, // Gère l'état du bouton 'Inconnu'
             ageGroups: [],
+            ageUnknown: false, // Gère l'état du bouton 'Inconnu' pour l'âge
             formAnswers: {}  
         }">
       
         <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 2</h1>
 
         <!-- Question 1 : Profil -->
-        <p class="text-xl mb-4">Quel est votre profil ?</p>
-        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
+        <p class="text-xl mb-4">Définir le profil :</p>
+        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-2">
             <template x-for="option in ['Seul', 'Couple', 'Famille', 'Groupe d’amis']">
                 <button 
                     type="button"
-                    x-on:click="profile = option"
+                    x-on:click="profile = option; profileUnknown = false"
                     :class="profile === option ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
-                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400"
+                    :disabled="profileUnknown">
                     <span x-text="option"></span>
                 </button>
             </template>
         </div>
+        <!-- Bouton Inconnu -->
+        <button 
+            type="button"
+            x-on:click="profileUnknown = !profileUnknown; if(profileUnknown) profile = 'Inconnu'; else profile = ''"
+            :class="profileUnknown ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+            class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+            Inconnu
+        </button>
+
+        <!-- Séparateur -->
+        <hr class="my-6 border-gray-300">
 
         <!-- Question 2 : Tranche d’âge -->
-        <p class="text-xl mb-4">Quelle(s) tranche(s) d’âge vous correspond(ent) ?</p>
-        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
+        <p class="text-xl mb-4">Tranche(s) d’âge correspondant :</p>
+        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-2">
             <template x-for="option in ['18-25', '25-40', '40-60', '60+']">
                 <button 
                     type="button"
                     x-on:click="ageGroups.includes(option) ? ageGroups.splice(ageGroups.indexOf(option), 1) : ageGroups.push(option)"
                     :class="ageGroups.includes(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
-                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400"
+                    :disabled="ageUnknown">
                     <span x-text="option"></span>
                 </button>
             </template>
         </div>
-
+        <!-- Bouton Inconnu pour l'âge -->
+        <button 
+            type="button"
+            x-on:click="ageUnknown = !ageUnknown; if(ageUnknown) ageGroups = ['Inconnu']; else ageGroups = []"
+            :class="ageUnknown ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+            class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+            Inconnu
+        </button>
+        <br>
         <!-- Bouton de validation -->
         <button
             type="button"
-            x-on:click="if(profile && ageGroups.length > 0){ 
+            x-on:click="if(profile || profileUnknown){ 
                 formAnswers.city = city;
                 formAnswers.profile = profile;
                 formAnswers.ageGroups = ageGroups;
@@ -77,7 +100,7 @@ export async function getStaticPaths() {
             } else { 
                 alert('Veuillez sélectionner un profil et au moins une tranche d’âge'); 
             }"
-            class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mt-6">
             Valider
         </button>
     </main>
