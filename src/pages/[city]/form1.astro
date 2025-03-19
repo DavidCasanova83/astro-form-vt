@@ -16,9 +16,9 @@ export async function getStaticPaths() {
     <title>Formulaire Étape 1</title> <!-- 🔥 Valeur par défaut -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 h-screen flex items-center justify-center">
     <Header />
-    <main class="container mx-auto p-6 max-w-lg bg-white shadow-lg rounded-lg"
+    <main class="mx-auto p-6 max-w-2xl bg-white shadow-lg rounded-lg"
         x-init="
             city = window.location.pathname.split('/')[1]; 
             document.title = 'Formulaire - ' + city + ' - Étape 1';

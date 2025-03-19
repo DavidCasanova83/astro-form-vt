@@ -16,13 +16,13 @@ export async function getStaticPaths() {
     <title>Étape 5</title> <!-- 🔥 Valeur par défaut -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 h-screen flex items-center justify-center">
     <Header />
-    <main class="container mx-auto p-6 max-w-lg bg-white shadow-lg rounded-lg">
+    <main class="container mx-auto p-6 max-w-2xl bg-white shadow-lg rounded-lg">
       
         <h1 class="text-3xl font-bold mb-4 text-left">Envoi du formulaire</h1>
 
-        <p class="text-lg text-left text-gray-600 mb-6">Dernière étape : renseignez e-mail et consentement.</p>
+        <p class="text-lg text-left text-gray-600 mb-6">Dernière étape : renseigner e-mail et consentement.</p>
 
         <div x-data="{ 
             email: '', 
