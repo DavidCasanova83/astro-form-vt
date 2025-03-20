@@ -7,31 +7,128 @@ import "../styles/global.css";
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8" />
-    <title>Statistiques</title>
+    <title>Statistiques détaillées</title>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 h-screen flex items-center justify-center">
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center justify-start">
     <Header />
-    <main class="container mx-auto p-6 max-w-2xl bg-white shadow-lg rounded-lg text-center"
-        x-data="{ count: 0 }"
-        x-init="fetch('/api/statistics')
-                .then(response => response.json())
-                .then(data => { if (data.success) count = data.count; })">
-        <h1 class="text-3xl font-bold mb-4">Statistiques</h1>
-        <p class="text-xl">Nombre de formulaires envoyés :</p>
-        <p class="text-4xl font-bold text-blue-600 mt-2" x-text="count"></p>
+    <main class="container mx-auto p-6 max-w-4xl bg-white shadow-lg rounded-lg text-center"
+        x-data="{
+            count: 0,
+            forms: [],
+            cities: {},
+            profiles: {},
+            contactModes: {},
+            fetchData() {
+                fetch('/api/statistics')
+                    .then(response => response.json())
+                    .then(data => { if (data.success) this.count = data.count; });
+                
+                fetch('/api/getAllForms')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.forms = data.data;
+                            this.processData();
+                        }
+                    });
+            },
+            processData() {
+                this.cities = {};
+                this.profiles = {};
+                this.contactModes = {};
+                
+                this.forms.forEach(form => {
+                    this.cities[form.city] = (this.cities[form.city] || 0) + 1;
+                    this.profiles[form.profile] = (this.profiles[form.profile] || 0) + 1;
+                    this.contactModes[form.contactMode] = (this.contactModes[form.contactMode] || 0) + 1;
+                });
+                
+                this.renderCharts();
+            },
+            renderCharts() {
+                setTimeout(() => {
+                    new Chart(document.getElementById('cityChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(this.cities),
+                            datasets: [{
+                                data: Object.values(this.cities),
+                                backgroundColor: ['#1E90FF', '#32CD32', '#FF4500', '#FFD700', '#8A2BE2']
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('profileChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.profiles),
+                            datasets: [{
+                                data: Object.values(this.profiles),
+                                backgroundColor: '#FF4500'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('contactChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.contactModes),
+                            datasets: [{
+                                data: Object.values(this.contactModes),
+                                backgroundColor: ['#1E90FF', '#32CD32', '#FF4500']
+                            }]
+                        }
+                    });
+                }, 500);
+            }
+        }"
+        x-init="fetchData()">
+
+        <h1 class="text-3xl font-bold mb-4">Statistiques détaillées</h1>
+        <p class="text-xl">Nombre total de formulaires envoyés : <span class="text-4xl font-bold text-blue-600" x-text="count"></span></p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition des demandes par ville</h2>
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition des profils</h2>
+                <canvas id="profileChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Modes de contact</h2>
+                <canvas id="contactChart"></canvas>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold mt-8">Dernières demandes</h2>
+        <table class="min-w-full border-collapse border border-gray-300 mt-4">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border border-gray-300 px-4 py-2">Ville</th>
+                    <th class="border border-gray-300 px-4 py-2">Profil</th>
+                    <th class="border border-gray-300 px-4 py-2">Pays</th>
+                    <th class="border border-gray-300 px-4 py-2">Contact</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="form in forms.slice(-5).reverse()" :key="form.primaire">
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2" x-text="form.city"></td>
+                        <td class="border border-gray-300 px-4 py-2" x-text="form.profile"></td>
+                        <td class="border border-gray-300 px-4 py-2" x-text="form.country"></td>
+                        <td class="border border-gray-300 px-4 py-2" x-text="form.contactMode"></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
     </main>
-    <script>
-      fetch('/api/getAllForms')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            console.log("📊 Données récupérées depuis DynamoDB :", data.data);
-          } else {
-            console.error("❌ Erreur lors de la récupération :", data.error);
-          }
-        })
-        .catch(error => console.error("⚠️ Erreur de connexion à l'API :", error));
-    </script>    
 </body>
 </html>
