@@ -30,7 +30,10 @@ export async function getStaticPaths() {
             consentDataProcessing: false, 
             formAnswers: {} 
         }"
-        x-init="formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}')"
+        x-init="
+        city = window.location.pathname.split('/')[1];
+        document.title = 'Formulaire - ' + city + ' - Étape 5';
+        formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}')"
         class="space-y-4">
 
             <!-- Champ Email -->
@@ -87,7 +90,7 @@ export async function getStaticPaths() {
                     .then(data => {
                         console.log('Réponse du serveur : ', data);
                         alert('Merci ! Votre formulaire est bien enregistré.');
-                        window.location.href = '/merci';
+                        window.location.href='/' + city + '/form1';
                     })
                     .catch(error => {
                         console.error('Erreur lors de la sauvegarde : ', error);
