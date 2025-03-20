@@ -1,7 +1,7 @@
 ---
 import Header from '../../components/Header.astro';
 import "../../styles/global.css";
-import cities from '../../data/cities.json'; // 🔥 Import des villes dynamiques
+import cities from '../../data/cities.json';
 
 // Astro doit savoir quelles pages générer avant le build
 export async function getStaticPaths() {
@@ -13,12 +13,12 @@ export async function getStaticPaths() {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulaire Étape 4</title> <!-- 🔥 Valeur par défaut -->
+    <title>Étape 4</title> <!-- 🔥 Valeur par défaut -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 h-screen flex items-center justify-center">
     <Header />
-    <main class="container mx-auto p-4 max-w-lg"
+    <main class="container mx-auto p-6 max-w-2xl bg-white shadow-lg rounded-lg"
         x-init="
             city = window.location.pathname.split('/')[1]; 
             document.title = 'Formulaire - ' + city + ' - Étape 4';
@@ -51,7 +51,7 @@ export async function getStaticPaths() {
         <!-- Vérification et affichage du bureau -->
         <p class="text-xl font-semibold mb-2">Bureau détecté : <span class="text-blue-600 font-bold" x-text="city"></span></p>
 
-        <!-- Question 1 : Objet de la demande spécifique -->
+        <!-- Question 1 : Demande spécifique -->
         <template x-if="specificOptions[city]">
             <div>
                 <p class="text-xl mb-2">Demande spécifique à <span class="font-bold" x-text="city"></span> :</p>
@@ -68,7 +68,7 @@ export async function getStaticPaths() {
             </div>
         </template>
 
-        <!-- Question 2 : Objet de la demande générale -->
+        <!-- Question 2 : Demande générale -->
         <p class="text-xl mb-2">Demande générale :</p>
         <div class="flex flex-wrap gap-2 mb-4">
             <template x-for="option in generalOptions" :key="option">
@@ -84,7 +84,7 @@ export async function getStaticPaths() {
         <!-- Séparateur -->
         <hr class="my-4 border-t border-gray-300">
 
-        <!-- Champ de saisie pour "Autres, à préciser..." TOUJOURS AFFICHÉ -->
+        <!-- Champ de saisie pour "Autres, à préciser..." (TOUJOURS AFFICHÉ) -->
         <div class="mb-4">
             <p class="text-lg font-semibold mb-2">Autres, à préciser :</p>
             <input 
@@ -102,33 +102,17 @@ export async function getStaticPaths() {
                 formAnswers.specificRequests = specificRequests;
                 formAnswers.generalRequests = generalRequests;
                 formAnswers.otherRequest = otherRequest;
-                
+
                 localStorage.setItem('formAnswers', JSON.stringify(formAnswers));
                 console.log('Form4 - Données sauvegardées : ', JSON.parse(localStorage.getItem('formAnswers')));
 
-                // Envoi des données au serveur
-                fetch('/api/saveAnswer', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formAnswers)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Réponse du serveur : ', data);
-                    alert('Données enregistrées sur le serveur !');
-
-                    // Redirige vers la page de résumé
-                    window.location.href='/' + city + '/form1';
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la sauvegarde : ', error);
-                    alert('Erreur lors de la sauvegarde sur le serveur');
-                });
+                // Redirige vers l'étape 5 pour collecter l'e-mail et le consentement
+                window.location.href = '/' + city + '/form5';
             } else { 
                 alert('Veuillez sélectionner au moins une demande spécifique, générale ou préciser une autre demande.'); 
             }"
-            class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-            Terminer
+            class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 mt-4 rounded-lg text-lg cursor-pointer">
+            Suivant
         </button>
     </main>
 </body>
