@@ -21,7 +21,7 @@ export async function getStaticPaths() {
     <main class="container mx-auto p-6 max-w-2xl bg-white shadow-lg rounded-lg"
         x-init="
             city = window.location.pathname.split('/')[1]; 
-            document.title = 'Formulaire - ' + city + ' - Étape 2';
+            document.title = city + ' - Étape 2';
             formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}');
             $watch('formAnswers', value => localStorage.setItem('formAnswers', JSON.stringify(value)))
         "
@@ -34,7 +34,7 @@ export async function getStaticPaths() {
             formAnswers: {}  
         }">
       
-        <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 2</h1>
+        <h1 class="text-3xl font-bold mb-4">Étape 2</h1>
 
         <!-- Question 1 : Profil -->
         <p class="text-xl mb-4">Définir le profil :</p>

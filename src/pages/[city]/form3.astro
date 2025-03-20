@@ -19,71 +19,112 @@ export async function getStaticPaths() {
 <body class="bg-gray-100 text-gray-800 h-screen flex items-center justify-center">
     <Header />
     <main class="container mx-auto p-6 max-w-2xl bg-white shadow-lg rounded-lg"
-        x-init="
-            city = window.location.pathname.split('/')[1]; 
-            document.title = 'Formulaire - ' + city + ' - Étape 3';
-            formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}');
-            $watch('formAnswers', value => localStorage.setItem('formAnswers', JSON.stringify(value)))
-        "
-        x-data="{ 
-            city: '',  
-            stayPeriod: 'Inconnu', 
-            startDate: '', 
-            endDate: '', 
-            formAnswers: {} 
-        }">
-      
-        <h1 class="text-3xl font-bold mb-4">Formulaire - <span x-text="city"></span> - Étape 3</h1>
-        
-        <!-- Question 1 : Période de séjour -->
-        <p class="text-xl mb-4">Période de séjour :</p>
-        <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
-            <template x-for="option in ['Hiver', 'Printemps', 'Été', 'Automne', 'Inconnu']">
+    x-init="
+    city = window.location.pathname.split('/')[1]; 
+    document.title = city + ' - Étape finale';
+    formAnswers = JSON.parse(localStorage.getItem('formAnswers') || '{}');
+    $watch('formAnswers', value => localStorage.setItem('formAnswers', JSON.stringify(value)))
+"
+x-data="{ 
+    city: '',  
+    specificRequests: [],
+    generalRequests: [],
+    otherRequest: '',
+    formAnswers: {},
+    specificOptions: {
+        'annot': ['Escalade', 'Train à Vapeur', 'Grès d’Annot'],
+        'colmars-les-alpes': ['À définir'],
+        'entrevaux': ['Citadelle', 'Gorge de Daluis', 'Train à Vapeur'],
+        'la-palud-sur-verdon': ['Blanc-Martel', 'Route des Crêtes', 'Escalade et via cordatta'],
+        'saint-andre-les-alpes': ['Lac de Castillon', 'Parapente']
+    },
+    generalOptions: [
+        'Randonnées', 'Patrimoine Culturel', 'Baignade', 'Activité d’eau douce (pédalo, canoë)',
+        'Vélo', 'Autres activités de pleine nature', 'Commerces', 'Restaurants', 
+        'Accès', 'Informations pratiques', 'Hébergements', 'Evènements, animations',
+        'Photocopies ou autre demande d’habitant', 'Partenariat'
+    ]
+}">
+
+<h1 class="text-3xl font-bold mb-4">Étape final</h1>
+
+
+<!-- Question 1 : Demande spécifique -->
+<template x-if="specificOptions[city]">
+    <div>
+        <p class="text-xl mb-2">Demande spécifique à <span class="font-bold" x-text="city"></span> :</p>
+        <div class="flex flex-wrap gap-2 mb-4">
+            <template x-for="option in specificOptions[city]" :key="option">
                 <button 
-                    type="button"
-                    x-on:click="stayPeriod = option"
-                    :class="stayPeriod === option ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
-                    class="w-full md:w-auto px-4 py-2 rounded hover:bg-blue-400">
+                    x-on:click="specificRequests.includes(option) ? specificRequests.splice(specificRequests.indexOf(option), 1) : specificRequests.push(option)"
+                    :class="specificRequests.includes(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+                    class="px-4 py-2 rounded hover:bg-blue-400">
                     <span x-text="option"></span>
                 </button>
             </template>
         </div>
+    </div>
+</template>
 
-        <!-- Question 2 : Date de début et de fin (facultatives) -->
-        <p class="text-xl mb-2">Dates de séjour, si vous pouvez les renseigner :</p>
-        <label class="block mb-2">
-            <span class="text-lg">Date de début :</span>
-            <input 
-                type="date" 
-                x-model="startDate" 
-                class="border p-2 rounded w-full mb-2">
-        </label>
-        <label class="block">
-            <span class="text-lg">Date de fin :</span>
-            <input 
-                type="date" 
-                x-model="endDate" 
-                class="border p-2 rounded w-full">
-        </label>
+<!-- Question 2 : Demande générale -->
+<p class="text-xl mb-2">Demande générale :</p>
+<div class="flex flex-wrap gap-2 mb-4">
+    <template x-for="option in generalOptions" :key="option">
+        <button 
+            x-on:click="generalRequests.includes(option) ? generalRequests.splice(generalRequests.indexOf(option), 1) : generalRequests.push(option)"
+            :class="generalRequests.includes(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'"
+            class="px-4 py-2 rounded hover:bg-blue-400">
+            <span x-text="option"></span>
+        </button>
+    </template>
+</div>
+
+<!-- Séparateur -->
+<hr class="my-4 border-t border-gray-300">
+
+<!-- Champ de saisie pour "Autres, à préciser..." (TOUJOURS AFFICHÉ) -->
+<div class="mb-4">
+    <p class="text-lg font-semibold mb-2">Autres, à préciser :</p>
+    <input 
+        type="text" 
+        x-model="otherRequest" 
+        class="border p-2 rounded w-full" 
+        placeholder="Précisez votre demande...">
+</div>
 
         <!-- Bouton de validation -->
         <button
             type="button"
-            x-on:click="if(stayPeriod){ 
+            x-on:click="if(specificRequests.length > 0 || generalRequests.length > 0 || otherRequest.trim() !== '') { 
                 formAnswers.city = city;
-                formAnswers.stayPeriod = stayPeriod;
-                if (startDate) formAnswers.startDate = startDate;
-                if (endDate) formAnswers.endDate = endDate;
+                formAnswers.specificRequests = specificRequests;
+                formAnswers.generalRequests = generalRequests;
+                formAnswers.otherRequest = otherRequest;
+
                 localStorage.setItem('formAnswers', JSON.stringify(formAnswers));
                 console.log('Form3 - Données sauvegardées : ', JSON.parse(localStorage.getItem('formAnswers')));
-
-                // Redirige vers l'étape 4 en conservant la ville détectée
-                window.location.href = '/' + city + '/form4';
+                
+                // Envoi des données au serveur
+                    fetch('/api/saveAnswer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formAnswers)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Réponse du serveur : ', data);
+                        alert('Merci ! Votre formulaire est bien enregistré.');
+                        window.location.href='/' + city + '/form1';
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la sauvegarde : ', error);
+                        alert('Erreur lors de la sauvegarde.');
+                    });
             } else { 
                 alert('Veuillez sélectionner une période de séjour.'); 
             }"
-            class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 mt-4 rounded-lg text-lg cursor-pointer">
-            Suivant
+            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 mt-4 rounded-lg text-lg cursor-pointer">
+            Envoyer
         </button>
     </main>
 </body>
