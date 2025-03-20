@@ -15,11 +15,18 @@ import "../styles/global.css";
     <Header />
     <main class="container mx-auto p-6 max-w-4xl bg-white shadow-lg rounded-lg text-center"
         x-data="{
-            count: 0,
-            forms: [],
-            cities: {},
-            profiles: {},
-            contactModes: {},
+            count: 0, // Nombre total de formulaires envoyés
+            forms: [], // Liste des formulaires récupérés depuis l'API
+            cities: {}, // Stocke le nombre de demandes par ville
+            profiles: {}, // Stocke le nombre de profils
+            contactModes: {}, // Stocke le nombre de contacts par mode
+            departments: {}, // Stocke le nombre de demandes par département
+            ageGroups: {}, // Stocke le nombre de demandes par tranche d'âge
+            specificRequests: {}, // Stocke le nombre de demandes spécifiques
+            generalRequests: {}, // Stocke le nombre de demandes générales
+            otherRequests: {}, // Stocke le nombre de demandes autres
+            
+            // Fonction pour récupérer les données depuis les API
             fetchData() {
                 fetch('/api/statistics')
                     .then(response => response.json())
@@ -34,54 +41,64 @@ import "../styles/global.css";
                         }
                     });
             },
+            
+            // Fonction pour traiter les données récupérées
             processData() {
                 this.cities = {};
                 this.profiles = {};
                 this.contactModes = {};
+                this.departments = {};
+                this.ageGroups = {};
+                this.specificRequests = {};
+                this.generalRequests = {};
+                this.otherRequests = {};
                 
+                // Parcours chaque formulaire et compte les occurrences
                 this.forms.forEach(form => {
                     this.cities[form.city] = (this.cities[form.city] || 0) + 1;
                     this.profiles[form.profile] = (this.profiles[form.profile] || 0) + 1;
                     this.contactModes[form.contactMode] = (this.contactModes[form.contactMode] || 0) + 1;
+                    this.departments[form.department] = (this.departments[form.department] || 0) + 1;
+                    this.otherRequests[form.otherRequest] = (this.otherRequests[form.otherRequest] || 0) + 1;
+                    
+                    form.ageGroups.forEach(age => {
+                        this.ageGroups[age] = (this.ageGroups[age] || 0) + 1;
+                    });
+                    
+                    form.specificRequests.forEach(request => {
+                        this.specificRequests[request] = (this.specificRequests[request] || 0) + 1;
+                    });
+                    
+                    form.generalRequests.forEach(request => {
+                        this.generalRequests[request] = (this.generalRequests[request] || 0) + 1;
+                    });
                 });
                 
                 this.renderCharts();
             },
+            
+            // Fonction pour générer les graphiques avec Chart.js
             renderCharts() {
                 setTimeout(() => {
-                    new Chart(document.getElementById('cityChart'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: Object.keys(this.cities),
-                            datasets: [{
-                                data: Object.values(this.cities),
-                                backgroundColor: ['#1E90FF', '#32CD32', '#FF4500', '#FFD700', '#8A2BE2']
-                            }]
-                        }
-                    });
-                    
-                    new Chart(document.getElementById('profileChart'), {
+                    // Graphiques supplémentaires
+                    new Chart(document.getElementById('departmentChart'), {
                         type: 'bar',
                         data: {
-                            labels: Object.keys(this.profiles),
+                            labels: Object.keys(this.departments),
                             datasets: [{
-                                data: Object.values(this.profiles),
-                                backgroundColor: '#FF4500'
+                                data: Object.values(this.departments),
+                                backgroundColor: '#1E90FF'
                             }]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: { y: { beginAtZero: true } }
                         }
                     });
                     
-                    new Chart(document.getElementById('contactChart'), {
+                    new Chart(document.getElementById('ageGroupChart'), {
                         type: 'pie',
                         data: {
-                            labels: Object.keys(this.contactModes),
+                            labels: Object.keys(this.ageGroups),
                             datasets: [{
-                                data: Object.values(this.contactModes),
-                                backgroundColor: ['#1E90FF', '#32CD32', '#FF4500']
+                                data: Object.values(this.ageGroups),
+                                backgroundColor: ['#FF4500', '#32CD32', '#FFD700']
                             }]
                         }
                     });
@@ -93,42 +110,17 @@ import "../styles/global.css";
         <h1 class="text-3xl font-bold mb-4">Statistiques détaillées</h1>
         <p class="text-xl">Nombre total de formulaires envoyés : <span class="text-4xl font-bold text-blue-600" x-text="count"></span></p>
 
+        <!-- Nouveaux graphiques -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div class="bg-gray-100 p-4 rounded-lg">
-                <h2 class="text-lg font-semibold mb-2">Répartition des demandes par ville</h2>
-                <canvas id="cityChart"></canvas>
+                <h2 class="text-lg font-semibold mb-2">Répartition par département</h2>
+                <canvas id="departmentChart"></canvas>
             </div>
             <div class="bg-gray-100 p-4 rounded-lg">
-                <h2 class="text-lg font-semibold mb-2">Répartition des profils</h2>
-                <canvas id="profileChart"></canvas>
-            </div>
-            <div class="bg-gray-100 p-4 rounded-lg">
-                <h2 class="text-lg font-semibold mb-2">Modes de contact</h2>
-                <canvas id="contactChart"></canvas>
+                <h2 class="text-lg font-semibold mb-2">Répartition par tranche d'âge</h2>
+                <canvas id="ageGroupChart"></canvas>
             </div>
         </div>
-
-        <h2 class="text-2xl font-bold mt-8">Dernières demandes</h2>
-        <table class="min-w-full border-collapse border border-gray-300 mt-4">
-            <thead>
-                <tr class="bg-gray-200">
-                    <th class="border border-gray-300 px-4 py-2">Ville</th>
-                    <th class="border border-gray-300 px-4 py-2">Profil</th>
-                    <th class="border border-gray-300 px-4 py-2">Pays</th>
-                    <th class="border border-gray-300 px-4 py-2">Contact</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template x-for="form in forms.slice(-5).reverse()" :key="form.primaire">
-                    <tr>
-                        <td class="border border-gray-300 px-4 py-2" x-text="form.city"></td>
-                        <td class="border border-gray-300 px-4 py-2" x-text="form.profile"></td>
-                        <td class="border border-gray-300 px-4 py-2" x-text="form.country"></td>
-                        <td class="border border-gray-300 px-4 py-2" x-text="form.contactMode"></td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
     </main>
 </body>
 </html>
