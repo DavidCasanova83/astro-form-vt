@@ -15,18 +15,17 @@ import "../styles/global.css";
     <Header />
     <main class="container mx-auto p-6 max-w-4xl bg-white shadow-lg rounded-lg text-center"
         x-data="{
-            count: 0, // Nombre total de formulaires envoyés
-            forms: [], // Liste des formulaires récupérés depuis l'API
-            cities: {}, // Stocke le nombre de demandes par ville
-            profiles: {}, // Stocke le nombre de profils
-            contactModes: {}, // Stocke le nombre de contacts par mode
-            departments: {}, // Stocke le nombre de demandes par département
-            ageGroups: {}, // Stocke le nombre de demandes par tranche d'âge
-            specificRequests: {}, // Stocke le nombre de demandes spécifiques
-            generalRequests: {}, // Stocke le nombre de demandes générales
-            otherRequests: {}, // Stocke le nombre de demandes autres
+            count: 0,
+            forms: [],
+            cities: {},
+            profiles: {},
+            contactModes: {},
+            departments: {},
+            ageGroups: {},
+            specificRequests: {},
+            generalRequests: {},
+            otherRequests: {},
             
-            // Fonction pour récupérer les données depuis les API
             fetchData() {
                 fetch('/api/statistics')
                     .then(response => response.json())
@@ -42,7 +41,6 @@ import "../styles/global.css";
                     });
             },
             
-            // Fonction pour traiter les données récupérées
             processData() {
                 this.cities = {};
                 this.profiles = {};
@@ -53,7 +51,6 @@ import "../styles/global.css";
                 this.generalRequests = {};
                 this.otherRequests = {};
                 
-                // Parcours chaque formulaire et compte les occurrences
                 this.forms.forEach(form => {
                     this.cities[form.city] = (this.cities[form.city] || 0) + 1;
                     this.profiles[form.profile] = (this.profiles[form.profile] || 0) + 1;
@@ -77,10 +74,30 @@ import "../styles/global.css";
                 this.renderCharts();
             },
             
-            // Fonction pour générer les graphiques avec Chart.js
             renderCharts() {
                 setTimeout(() => {
-                    // Graphiques supplémentaires
+                    new Chart(document.getElementById('cityChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.cities),
+                            datasets: [{
+                                data: Object.values(this.cities),
+                                backgroundColor: '#FF4500'
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('profileChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.profiles),
+                            datasets: [{
+                                data: Object.values(this.profiles),
+                                backgroundColor: ['#32CD32', '#FFD700', '#1E90FF']
+                            }]
+                        }
+                    });
+                    
                     new Chart(document.getElementById('departmentChart'), {
                         type: 'bar',
                         data: {
@@ -102,6 +119,39 @@ import "../styles/global.css";
                             }]
                         }
                     });
+                    
+                    new Chart(document.getElementById('specificRequestsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.specificRequests),
+                            datasets: [{
+                                data: Object.values(this.specificRequests),
+                                backgroundColor: '#8A2BE2'
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('generalRequestsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.generalRequests),
+                            datasets: [{
+                                data: Object.values(this.generalRequests),
+                                backgroundColor: '#32CD32'
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('otherRequestsChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.otherRequests),
+                            datasets: [{
+                                data: Object.values(this.otherRequests),
+                                backgroundColor: ['#FF4500', '#1E90FF', '#FFD700']
+                            }]
+                        }
+                    });
                 }, 500);
             }
         }"
@@ -110,8 +160,15 @@ import "../styles/global.css";
         <h1 class="text-3xl font-bold mb-4">Statistiques détaillées</h1>
         <p class="text-xl">Nombre total de formulaires envoyés : <span class="text-4xl font-bold text-blue-600" x-text="count"></span></p>
 
-        <!-- Nouveaux graphiques -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition par ville</h2>
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition par profil</h2>
+                <canvas id="profileChart"></canvas>
+            </div>
             <div class="bg-gray-100 p-4 rounded-lg">
                 <h2 class="text-lg font-semibold mb-2">Répartition par département</h2>
                 <canvas id="departmentChart"></canvas>
@@ -119,6 +176,18 @@ import "../styles/global.css";
             <div class="bg-gray-100 p-4 rounded-lg">
                 <h2 class="text-lg font-semibold mb-2">Répartition par tranche d'âge</h2>
                 <canvas id="ageGroupChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Demandes spécifiques</h2>
+                <canvas id="specificRequestsChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Demandes générales</h2>
+                <canvas id="generalRequestsChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Autres demandes</h2>
+                <canvas id="otherRequestsChart"></canvas>
             </div>
         </div>
     </main>
