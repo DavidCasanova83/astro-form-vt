@@ -1,0 +1,195 @@
+---
+import Header from '../components/Header.astro';
+import "../styles/global.css";
+---
+
+<html lang="fr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <title>Statistiques détaillées</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center justify-start">
+    <Header />
+    <main class="container mx-auto p-6 max-w-4xl bg-white shadow-lg rounded-lg text-center"
+        x-data="{
+            count: 0,
+            forms: [],
+            cities: {},
+            profiles: {},
+            contactModes: {},
+            departments: {},
+            ageGroups: {},
+            specificRequests: {},
+            generalRequests: {},
+            otherRequests: {},
+            
+            fetchData() {
+                fetch('/api/statistics')
+                    .then(response => response.json())
+                    .then(data => { if (data.success) this.count = data.count; });
+                
+                fetch('/api/getAllForms')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.forms = data.data;
+                            this.processData();
+                        }
+                    });
+            },
+            
+            processData() {
+                this.cities = {};
+                this.profiles = {};
+                this.contactModes = {};
+                this.departments = {};
+                this.ageGroups = {};
+                this.specificRequests = {};
+                this.generalRequests = {};
+                this.otherRequests = {};
+                
+                this.forms.forEach(form => {
+                    this.cities[form.city] = (this.cities[form.city] || 0) + 1;
+                    this.profiles[form.profile] = (this.profiles[form.profile] || 0) + 1;
+                    this.contactModes[form.contactMode] = (this.contactModes[form.contactMode] || 0) + 1;
+                    this.departments[form.department] = (this.departments[form.department] || 0) + 1;
+                    this.otherRequests[form.otherRequest] = (this.otherRequests[form.otherRequest] || 0) + 1;
+                    
+                    form.ageGroups.forEach(age => {
+                        this.ageGroups[age] = (this.ageGroups[age] || 0) + 1;
+                    });
+                    
+                    form.specificRequests.forEach(request => {
+                        this.specificRequests[request] = (this.specificRequests[request] || 0) + 1;
+                    });
+                    
+                    form.generalRequests.forEach(request => {
+                        this.generalRequests[request] = (this.generalRequests[request] || 0) + 1;
+                    });
+                });
+                
+                this.renderCharts();
+            },
+            
+            renderCharts() {
+                setTimeout(() => {
+                    new Chart(document.getElementById('cityChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.cities),
+                            datasets: [{
+                                data: Object.values(this.cities),
+                                backgroundColor: '#189187'
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('profileChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.profiles),
+                            datasets: [{
+                                data: Object.values(this.profiles),
+                                backgroundColor: ['#0F5F5C', '#2CA08B', '#74C69D']
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('departmentChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.departments),
+                            datasets: [{
+                                data: Object.values(this.departments),
+                                backgroundColor: '#D8F3DC'
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('ageGroupChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.ageGroups),
+                            datasets: [{
+                                data: Object.values(this.ageGroups),
+                                backgroundColor: ['#05668D', '#028090', '#00A896']
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('specificRequestsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.specificRequests),
+                            datasets: [{
+                                data: Object.values(this.specificRequests),
+                                backgroundColor: '#F4A261'
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('generalRequestsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.generalRequests),
+                            datasets: [{
+                                data: Object.values(this.generalRequests),
+                                backgroundColor: '#E76F51'
+                            }]
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('otherRequestsChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.otherRequests),
+                            datasets: [{
+                                data: Object.values(this.otherRequests),
+                                backgroundColor: ['#FFC857', '#8E44AD', '#344E5C']
+                            }]
+                        }
+                    });
+                }, 500);
+            }
+        }"
+        x-init="fetchData()">
+
+        <h1 class="text-3xl font-bold mb-4">Statistiques détaillées</h1>
+        <p class="text-xl">Nombre total de formulaires envoyés : <span class="text-4xl font-bold text-blue-600" x-text="count"></span></p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition par ville</h2>
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition par profil</h2>
+                <canvas id="profileChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition par département</h2>
+                <canvas id="departmentChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Répartition par tranche d'âge</h2>
+                <canvas id="ageGroupChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Demandes spécifiques</h2>
+                <canvas id="specificRequestsChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Demandes générales</h2>
+                <canvas id="generalRequestsChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Autres demandes</h2>
+                <canvas id="otherRequestsChart"></canvas>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
