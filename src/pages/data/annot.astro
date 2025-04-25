@@ -11,9 +11,9 @@ import "../../styles/global.css";
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col">
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center justify-start">
     <Header />
-    <main class="p-6 bg-white shadow-lg rounded-lg text-center"
+    <main class="mx-auto p-6 max-w-4xl bg-black shadow-lg rounded-lg text-center"
         x-data="{
             count: 0,
             forms: [],
@@ -166,8 +166,8 @@ import "../../styles/global.css";
         <h1 class="text-3xl font-bold mb-4">Statistiques pour Annot</h1>
         <p class="text-xl mb-6">Nombre total de formulaires : <span class="text-4xl font-bold text-blue-600" x-text="count"></span></p>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 max-h-[60vh] min-h-[400px]">
-          <div class="bg-gray-100 p-4 rounded-lg">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="bg-gray-100 p-4 rounded-lg">
                 <h2 class="text-lg font-semibold mb-2">Profils des visiteurs</h2>
                 <canvas id="profileChart"></canvas>
             </div>
