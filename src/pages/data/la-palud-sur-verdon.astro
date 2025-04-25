@@ -192,20 +192,26 @@ import "../../styles/global.css";
                     <thead class="bg-gray-100">
                         <tr>
                             <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Tranches d'âge</th>
+                            <th class="px-4 py-2 text-left">Pays</th>
+                            <th class="px-4 py-2 text-left">Département</th>
+                            <th class="px-4 py-2 text-left">Demandes générales</th>
+                            <th class="px-4 py-2 text-left">Autres demandes</th>
                             <th class="px-4 py-2 text-left">Profil</th>
-                            <th class="px-4 py-2 text-left">Âge</th>
-                            <th class="px-4 py-2 text-left">Mode de contact</th>
-                            <th class="px-4 py-2 text-left">Demandes</th>
+                            <th class="px-4 py-2 text-left">Demandes spécifiques</th>
                         </tr>
                     </thead>
                     <tbody>
                         <template x-for="form in forms.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))" :key="form.timestamp">
                             <tr class="border-t">
                                 <td class="px-4 py-2" x-text="new Date(form.timestamp).toLocaleDateString('fr-FR')"></td>
-                                <td class="px-4 py-2" x-text="form.profile"></td>
                                 <td class="px-4 py-2" x-text="form.ageGroups.join(', ')"></td>
-                                <td class="px-4 py-2" x-text="form.contactMode"></td>
-                                <td class="px-4 py-2" x-text="[...form.generalRequests, ...form.specificRequests].join(', ')"></td>
+                                <td class="px-4 py-2" x-text="form.country"></td>
+                                <td class="px-4 py-2" x-text="form.department"></td>
+                                <td class="px-4 py-2" x-text="form.generalRequests.join(', ')"></td>
+                                <td class="px-4 py-2" x-text="form.otherRequest || '-'"></td>
+                                <td class="px-4 py-2" x-text="form.profile"></td>
+                                <td class="px-4 py-2" x-text="form.specificRequests.join(', ') || '-'"></td>
                             </tr>
                         </template>
                     </tbody>
