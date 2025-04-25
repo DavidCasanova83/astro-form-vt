@@ -17,11 +17,16 @@ const { cityName } = Astro.props;
 
 interface Form {
     city: string;
-    createdAt: string;
+    timestamp: string;
     profile: string;
     department: string;
     contactMode: string;
     ageGroups: string[];
+    specificRequests: string[];
+    generalRequests: string[];
+    country: string;
+    otherRequest?: string;
+    primaire: string;
 }
 
 // Récupération des données des formulaires pour cette ville
@@ -29,8 +34,7 @@ let cityForms: Form[] = [];
 try {
     const response = await fetch('/api/getAllForms');
     const data = await response.json();
-    console.log('Données API complètes:', data);  // Log des données complètes
-    console.log('Données de la ville:', cityName, cityForms);  // Log des données filtrées
+    console.log('Données API complètes:', data);
     if (data.success) {
         cityForms = data.data.filter((form: Form) => form.city === cityName);
     }
@@ -68,16 +72,20 @@ try {
                             <th class="px-4 py-2 text-left">Département</th>
                             <th class="px-4 py-2 text-left">Mode de contact</th>
                             <th class="px-4 py-2 text-left">Tranches d'âge</th>
+                            <th class="px-4 py-2 text-left">Demandes générales</th>
+                            <th class="px-4 py-2 text-left">Demandes spécifiques</th>
                         </tr>
                     </thead>
                     <tbody>
                         {cityForms.map((form: Form) => (
                             <tr class="border-t">
-                                <td class="px-4 py-2">{new Date(form.createdAt).toLocaleDateString('fr-FR')}</td>
+                                <td class="px-4 py-2">{new Date(form.timestamp).toLocaleDateString('fr-FR')}</td>
                                 <td class="px-4 py-2">{form.profile}</td>
                                 <td class="px-4 py-2">{form.department}</td>
                                 <td class="px-4 py-2">{form.contactMode}</td>
                                 <td class="px-4 py-2">{form.ageGroups.join(', ')}</td>
+                                <td class="px-4 py-2">{form.generalRequests.join(', ')}</td>
+                                <td class="px-4 py-2">{form.specificRequests.join(', ')}</td>
                             </tr>
                         ))}
                     </tbody>
