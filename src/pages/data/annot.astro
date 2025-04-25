@@ -25,6 +25,26 @@ import "../../styles/global.css";
             generalRequests: {},
             otherRequests: {},
             
+            isDragging: false,
+            startX: 0,
+            scrollLeft: 0,
+
+            startDrag(event) {
+                this.isDragging = true;
+                this.startX = event.pageX - this.$refs.scrollContainer.offsetLeft;
+                this.scrollLeft = this.$refs.scrollContainer.scrollLeft;
+            },
+            stopDrag() {
+                this.isDragging = false;
+            },
+            dragScroll(event) {
+                if (!this.isDragging) return;
+                event.preventDefault();
+                const x = event.pageX - this.$refs.scrollContainer.offsetLeft;
+                const walk = (x - this.startX) * 1.5;
+                this.$refs.scrollContainer.scrollLeft = this.scrollLeft - walk;
+            },
+
             fetchData() {
                 fetch('/api/getAllForms')
                     .then(response => response.json())
@@ -187,7 +207,16 @@ import "../../styles/global.css";
 
         <div class="mt-8">
           <h2 class="text-2xl font-bold mb-4">Détail des formulaires</h2>
-          <div class="overflow-x-auto cursor-grab active:cursor-grabbing scroll-smooth" style="scrollbar-width: thin;">
+          <div 
+              x-ref="scrollContainer"
+              class="overflow-x-auto cursor-grab active:cursor-grabbing scroll-smooth"
+              style="scrollbar-width: thin;"
+              @mousedown="startDrag($event)"
+              @mouseup="stopDrag"
+              @mouseleave="stopDrag"
+              @mousemove="dragScroll($event)"
+              :class="{ 'select-none': isDragging }"
+          >
               <table class="min-w-full bg-white text-sm">
                   <thead class="bg-gray-100">
                       <tr>
