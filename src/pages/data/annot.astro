@@ -13,7 +13,7 @@ import "../../styles/global.css";
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center justify-start">
     <Header />
-    <main class="mx-auto p-6 max-w-4xl bg-black shadow-lg rounded-lg text-center"
+    <main class="mx-auto p-6 max-w-4xl bg-white shadow-lg rounded-lg text-center"
         x-data="{
             count: 0,
             forms: [],
@@ -186,38 +186,38 @@ import "../../styles/global.css";
         </div>
 
         <div class="mt-8">
-            <h2 class="text-2xl font-bold mb-4">Détail des formulaires</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Date</th>
-                            <th class="px-4 py-2 text-left">Tranches d'âge</th>
-                            <th class="px-4 py-2 text-left">Pays</th>
-                            <th class="px-4 py-2 text-left">Département</th>
-                            <th class="px-4 py-2 text-left">Demandes générales</th>
-                            <th class="px-4 py-2 text-left">Autres demandes</th>
-                            <th class="px-4 py-2 text-left">Profil</th>
-                            <th class="px-4 py-2 text-left">Demandes spécifiques</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="form in forms.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))" :key="form.timestamp">
-                            <tr class="border-t">
-                                <td class="px-4 py-2" x-text="new Date(form.timestamp).toLocaleDateString('fr-FR')"></td>
-                                <td class="px-4 py-2" x-text="form.ageGroups.join(', ')"></td>
-                                <td class="px-4 py-2" x-text="form.country"></td>
-                                <td class="px-4 py-2" x-text="form.department"></td>
-                                <td class="px-4 py-2" x-text="form.generalRequests.join(', ')"></td>
-                                <td class="px-4 py-2" x-text="form.otherRequest || '-'"></td>
-                                <td class="px-4 py-2" x-text="form.profile"></td>
-                                <td class="px-4 py-2" x-text="form.specificRequests.join(', ') || '-'"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+          <h2 class="text-2xl font-bold mb-4">Détail des formulaires</h2>
+          <div class="overflow-x-auto cursor-grab active:cursor-grabbing scroll-smooth" style="scrollbar-width: thin;">
+              <table class="min-w-full bg-white text-sm">
+                  <thead class="bg-gray-100">
+                      <tr>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Date</th>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Tranches d'âge</th>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Pays</th>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Département</th>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Demandes générales</th>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Autres demandes</th>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Profil</th>
+                          <th class="px-2 py-1 text-left whitespace-nowrap">Demandes spécifiques</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <template x-for="form in forms.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))" :key="form.timestamp">
+                          <tr class="border-t hover:bg-gray-50">
+                              <td class="px-2 py-1 whitespace-nowrap" x-text="new Date(form.timestamp).toLocaleDateString('fr-FR')"></td>
+                              <td class="px-2 py-1 whitespace-nowrap" x-text="form.ageGroups.join(', ')"></td>
+                              <td class="px-2 py-1 whitespace-nowrap" x-text="form.country"></td>
+                              <td class="px-2 py-1 whitespace-nowrap" x-text="form.department"></td>
+                              <td class="px-2 py-1 whitespace-nowrap" x-text="form.generalRequests.join(', ')"></td>
+                              <td class="px-2 py-1 whitespace-nowrap truncate max-w-[150px]" x-text="form.otherRequest || '-'"></td>
+                              <td class="px-2 py-1 whitespace-nowrap" x-text="form.profile"></td>
+                              <td class="px-2 py-1 whitespace-nowrap truncate max-w-[150px]" x-text="form.specificRequests.join(', ') || '-'"></td>
+                          </tr>
+                      </template>
+                  </tbody>
+              </table>
+          </div>
+      </div>
     </main>
 </body>
 </html> 
