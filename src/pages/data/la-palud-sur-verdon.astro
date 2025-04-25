@@ -7,7 +7,7 @@ import "../../styles/global.css";
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8" />
-    <title>Statistiques - Annot</title>
+    <title>Statistiques - La Palud-sur-Verdon</title>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -31,11 +31,11 @@ import "../../styles/global.css";
                     .then(data => {
                         console.log('Données brutes:', data);
                         if (data.success) {
-                            // Filtrer uniquement les données pour Annot
-                            this.forms = data.data.filter(form => form.city === 'annot');
+                            // Filtrer uniquement les données pour La Palud-sur-Verdon
+                            this.forms = data.data.filter(form => form.city === 'la-palud-sur-verdon');
                             this.count = this.forms.length;
                             this.processData();
-                            console.log('Données filtrées pour Annot:', this.forms);
+                            console.log('Données filtrées pour La Palud-sur-Verdon:', this.forms);
                         }
                     });
             },
@@ -163,7 +163,7 @@ import "../../styles/global.css";
         }"
         x-init="fetchData()">
 
-        <h1 class="text-3xl font-bold mb-4">Statistiques pour Annot</h1>
+        <h1 class="text-3xl font-bold mb-4">Statistiques pour Colmars-les-alpes</h1>
         <p class="text-xl mb-6">Nombre total de formulaires : <span class="text-4xl font-bold text-blue-600" x-text="count"></span></p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
