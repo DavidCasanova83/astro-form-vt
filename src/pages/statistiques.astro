@@ -29,18 +29,21 @@ import "../styles/global.css";
             fetchData() {
                 fetch('/api/statistics')
                     .then(response => response.json())
-                    .then(data => { if (data.success) this.count = data.count; });
+                    .then(data => { 
+                        console.log('Données statistiques:', data);  // Log des stats
+                        if (data.success) this.count = data.count; 
+                    });
                 
                 fetch('/api/getAllForms')
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Toutes les données des formulaires:', data);  // Log des formulaires
                         if (data.success) {
                             this.forms = data.data;
                             this.processData();
                         }
                     });
             },
-            console.log('Données API complètes:', data);
             processData() {
                 this.cities = {};
                 this.profiles = {};
