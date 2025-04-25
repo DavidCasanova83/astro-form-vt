@@ -1,0 +1,95 @@
+---
+import Header from '../../components/Header.astro';
+import "../../styles/global.css";
+import cities from '../../data/cities.json';
+
+// Cette fonction va générer les routes pour chaque ville
+export async function getStaticPaths() {
+    return cities.map((city) => {
+        return {
+            params: { city },
+            props: { cityName: city }
+        };
+    });
+}
+
+const { cityName } = Astro.props;
+
+interface Form {
+    city: string;
+    createdAt: string;
+    profile: string;
+    department: string;
+    contactMode: string;
+    ageGroups: string[];
+}
+
+// Récupération des données des formulaires pour cette ville
+let cityForms: Form[] = [];
+try {
+    const response = await fetch('http://localhost:3000/api/getAllForms');
+    const data = await response.json();
+    console.log('Données API complètes:', data);  // Log des données complètes
+    console.log('Données de la ville:', cityName, cityForms);  // Log des données filtrées
+    if (data.success) {
+        cityForms = data.data.filter((form: Form) => form.city === cityName);
+    }
+} catch (error) {
+    console.error('Erreur lors de la récupération des données:', error);
+}
+
+---
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques - {cityName}</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+    <Header />
+    
+    <main class="container mx-auto p-6 max-w-4xl">
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <h1 class="text-3xl font-bold mb-6 text-center">
+                Données pour {cityName.charAt(0).toUpperCase() + cityName.slice(1).replace(/-/g, ' ')}
+            </h1>
+            
+            <div class="mb-4">
+                <p class="text-xl mb-4">Nombre total d'entrées : <span class="font-bold text-blue-600">{cityForms.length}</span></p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Profil</th>
+                            <th class="px-4 py-2 text-left">Département</th>
+                            <th class="px-4 py-2 text-left">Mode de contact</th>
+                            <th class="px-4 py-2 text-left">Tranches d'âge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {cityForms.map((form: Form) => (
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{new Date(form.createdAt).toLocaleDateString('fr-FR')}</td>
+                                <td class="px-4 py-2">{form.profile}</td>
+                                <td class="px-4 py-2">{form.department}</td>
+                                <td class="px-4 py-2">{form.contactMode}</td>
+                                <td class="px-4 py-2">{form.ageGroups.join(', ')}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {cityForms.length === 0 && (
+                <p class="text-center text-gray-500 mt-4">
+                    Aucune donnée disponible pour cette ville.
+                </p>
+            )}
+        </div>
+    </main>
+</body>
+</html> 
