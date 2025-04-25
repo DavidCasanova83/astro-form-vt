@@ -27,7 +27,7 @@ interface Form {
 // Récupération des données des formulaires pour cette ville
 let cityForms: Form[] = [];
 try {
-    const response = await fetch('http://localhost:3000/api/getAllForms');
+    const response = await fetch('/api/getAllForms');
     const data = await response.json();
     console.log('Données API complètes:', data);  // Log des données complètes
     console.log('Données de la ville:', cityName, cityForms);  // Log des données filtrées
