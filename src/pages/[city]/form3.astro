@@ -114,6 +114,7 @@ x-data="{
                     .then(data => {
                         console.log('Réponse du serveur : ', data);
                         alert('Merci ! Votre formulaire est bien enregistré.');
+                        localStorage.removeItem('formAnswers');
                         window.location.href='/' + city + '/form1';
                     })
                     .catch(error => {
