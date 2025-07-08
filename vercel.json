@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/statistics.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/getAllForms.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/saveAnswer.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
