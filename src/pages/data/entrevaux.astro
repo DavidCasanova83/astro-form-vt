@@ -1,0 +1,252 @@
+---
+import Header from '../../components/Header.astro';
+import "../../styles/global.css";
+---
+
+<html lang="fr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <title>Statistiques - Entrevaux</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center justify-start">
+    <Header />
+    <main class="mx-auto p-6 max-w-4xl bg-white shadow-lg rounded-lg text-center"
+        x-data="{
+            count: 0,
+            forms: [],
+            profiles: {},
+            contactModes: {},
+            departments: {},
+            ageGroups: {},
+            specificRequests: {},
+            generalRequests: {},
+            otherRequests: {},
+            
+            isDragging: false,
+            startX: 0,
+            scrollLeft: 0,
+
+            startDrag(event) {
+                this.isDragging = true;
+                this.startX = event.pageX - this.$refs.scrollContainer.offsetLeft;
+                this.scrollLeft = this.$refs.scrollContainer.scrollLeft;
+            },
+            stopDrag() {
+                this.isDragging = false;
+            },
+            dragScroll(event) {
+                if (!this.isDragging) return;
+                event.preventDefault();
+                const x = event.pageX - this.$refs.scrollContainer.offsetLeft;
+                const walk = (x - this.startX) * 1.5;
+                this.$refs.scrollContainer.scrollLeft = this.scrollLeft - walk;
+            },
+
+            fetchData() {
+                fetch('/api/getAllForms')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Données brutes:', data);
+                        if (data.success) {
+                            // Filtrer uniquement les données pour Entrevaux
+                            this.forms = data.data.filter(form => form.city === 'entrevaux');
+                            this.count = this.forms.length;
+                            this.processData();
+                            console.log('Données filtrées pour Entrevaux:', this.forms);
+                        }
+                    });
+            },
+            processData() {
+                this.profiles = {};
+                this.contactModes = {};
+                this.departments = {};
+                this.ageGroups = {};
+                this.specificRequests = {};
+                this.generalRequests = {};
+                this.otherRequests = {};
+                
+                this.forms.forEach(form => {
+                    this.profiles[form.profile] = (this.profiles[form.profile] || 0) + 1;
+                    this.contactModes[form.contactMode] = (this.contactModes[form.contactMode] || 0) + 1;
+                    this.departments[form.department] = (this.departments[form.department] || 0) + 1;
+                    
+                    if (form.otherRequest && form.otherRequest.trim() !== '') {
+                        this.otherRequests[form.otherRequest] = (this.otherRequests[form.otherRequest] || 0) + 1;
+                    }
+                    
+                    form.ageGroups.forEach(age => {
+                        this.ageGroups[age] = (this.ageGroups[age] || 0) + 1;
+                    });
+                    
+                    form.specificRequests.forEach(request => {
+                        if (request.trim() !== '') {
+                            this.specificRequests[request] = (this.specificRequests[request] || 0) + 1;
+                        }
+                    });
+                    
+                    form.generalRequests.forEach(request => {
+                        if (request.trim() !== '') {
+                            this.generalRequests[request] = (this.generalRequests[request] || 0) + 1;
+                        }
+                    });
+                });
+                
+                this.renderCharts();
+            },
+            
+            renderCharts() {
+                setTimeout(() => {
+                    new Chart(document.getElementById('profileChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.profiles),
+                            datasets: [{
+                                data: Object.values(this.profiles),
+                                backgroundColor: ['#0F5F5C', '#2CA08B', '#74C69D']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Répartition par profil'
+                                }
+                            }
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('ageGroupChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.ageGroups),
+                            datasets: [{
+                                data: Object.values(this.ageGroups),
+                                backgroundColor: ['#05668D', '#028090', '#00A896', '#02C39A']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Répartition par âge'
+                                }
+                            }
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('requestsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(this.generalRequests),
+                            datasets: [{
+                                label: 'Demandes générales',
+                                data: Object.values(this.generalRequests),
+                                backgroundColor: '#E76F51'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('contactModeChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(this.contactModes),
+                            datasets: [{
+                                data: Object.values(this.contactModes),
+                                backgroundColor: ['#FFC857', '#8E44AD', '#344E5C']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Modes de contact'
+                                }
+                            }
+                        }
+                    });
+                }, 500);
+            }
+        }"
+        x-init="fetchData()">
+
+        <h1 class="text-3xl font-bold mb-4">Statistiques pour Entrevaux</h1>
+        <p class="text-xl mb-6">Nombre total de formulaires : <span class="text-4xl font-bold text-blue-600" x-text="count"></span></p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Profils des visiteurs</h2>
+                <canvas id="profileChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Tranches d'âge</h2>
+                <canvas id="ageGroupChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Types de demandes</h2>
+                <canvas id="requestsChart"></canvas>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-2">Modes de contact</h2>
+                <canvas id="contactModeChart"></canvas>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold mb-4">Détail des formulaires</h2>
+            <div 
+                x-ref="scrollContainer"
+                class="overflow-x-auto cursor-grab active:cursor-grabbing scroll-smooth"
+                style="scrollbar-width: thin;"
+                @mousedown="startDrag($event)"
+                @mouseup="stopDrag"
+                @mouseleave="stopDrag"
+                @mousemove="dragScroll($event)"
+                :class="{ 'select-none': isDragging }"
+            >
+                <table class="min-w-full bg-white text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Date</th>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Tranches d'âge</th>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Pays</th>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Département</th>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Demandes générales</th>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Autres demandes</th>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Profil</th>
+                            <th class="px-2 py-1 text-left whitespace-nowrap">Demandes spécifiques</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="form in forms.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))" :key="form.timestamp">
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="px-2 py-1 whitespace-nowrap" x-text="new Date(form.timestamp).toLocaleDateString('fr-FR')"></td>
+                                <td class="px-2 py-1 whitespace-nowrap" x-text="form.ageGroups.join(', ')"></td>
+                                <td class="px-2 py-1 whitespace-nowrap" x-text="form.country"></td>
+                                <td class="px-2 py-1 whitespace-nowrap" x-text="form.department"></td>
+                                <td class="px-2 py-1 whitespace-nowrap" x-text="form.generalRequests.join(', ')"></td>
+                                <td class="px-2 py-1 whitespace-nowrap truncate max-w-[150px]" x-text="form.otherRequest || '-'"></td>
+                                <td class="px-2 py-1 whitespace-nowrap" x-text="form.profile"></td>
+                                <td class="px-2 py-1 whitespace-nowrap truncate max-w-[150px]" x-text="form.specificRequests.join(', ') || '-'"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html> 

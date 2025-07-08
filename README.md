@@ -1,69 +1,146 @@
-# Astro Starter Kit: Blog
+# Astro Form VT - Tourism Data Collection
 
-```sh
-npm create astro@latest -- --template blog
-```
+Application web de collecte de données touristiques basée sur Astro avec formulaires multi-étapes et tableau de bord statistiques.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/blog)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/blog)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/blog/devcontainer.json)
+## 🚀 Fonctionnalités
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+- ✅ Formulaires multi-étapes dynamiques par ville
+- ✅ Interface responsive avec TailwindCSS
+- ✅ Sauvegarde des données dans AWS DynamoDB
+- ✅ Tableau de bord statistiques avec graphiques
+- ✅ Persistance des données côté client (LocalStorage)
+- ✅ API serverless pour la gestion des données
+- ✅ Déploiement sur Vercel
 
-![blog](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
+## 🏗️ Architecture
 
-Features:
-
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+### Structure du projet
 
 ```text
-├── public/
+├── api/
+│   ├── getAllForms.js      # API pour récupérer toutes les soumissions
+│   ├── saveAnswer.js       # API pour sauvegarder les réponses
+│   └── statistics.js       # API pour les statistiques
 ├── src/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+│   ├── components/         # Composants Astro réutilisables
+│   ├── data/
+│   │   ├── cities.json     # Liste des villes disponibles
+│   │   └── departments.json # Liste des départements
+│   ├── pages/
+│   │   ├── [city]/        # Routes dynamiques par ville
+│   │   │   ├── form1.astro # Étape 1 du formulaire
+│   │   │   ├── form2.astro # Étape 2 du formulaire
+│   │   │   └── form3.astro # Étape 3 du formulaire
+│   │   ├── statistiques.astro # Tableau de bord
+│   │   └── index.astro    # Page d'accueil
+│   └── styles/
+│       └── global.css     # Styles globaux
+├── public/                # Assets statiques
+└── data/
+    └── answers.json       # Données de développement
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+### Flux de données
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+1. **Sélection de ville** → Génération dynamique des formulaires
+2. **Collecte multi-étapes** → Sauvegarde temporaire dans localStorage
+3. **Soumission finale** → Envoi vers DynamoDB via API
+4. **Visualisation** → Agrégation et affichage des statistiques
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+## 🛠️ Technologies
 
-Any static assets, like images, can be placed in the `public/` directory.
+- **Astro** - Framework de génération de sites statiques
+- **TailwindCSS** - Framework CSS utilitaire
+- **AlpineJS** - Framework JavaScript léger
+- **AWS DynamoDB** - Base de données NoSQL
+- **Chart.js** - Visualisation de données
+- **Vercel** - Plateforme de déploiement
 
-## 🧞 Commands
+## 🚀 Démarrage rapide
 
-All commands are run from the root of the project, from a terminal:
+### Installation
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+```bash
+npm install
+```
 
-## 👀 Want to learn more?
+### Configuration
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Créer un fichier `.env` avec les variables d'environnement :
 
-## Credit
+```env
+AWS_REGION=us-east-1
+DYNAMODB_TABLE=Answers
+```
 
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
-# astro-form-vt
+### Développement
+
+```bash
+npm run dev
+```
+
+Le serveur de développement démarre sur `http://localhost:4321`
+
+### Build
+
+```bash
+npm run build
+```
+
+### Aperçu
+
+```bash
+npm run preview
+```
+
+## 📊 Utilisation
+
+### Formulaires
+
+1. Accédez à `/{ville}/form1` pour commencer un formulaire
+2. Complétez les 3 étapes du formulaire
+3. Les données sont sauvegardées automatiquement à chaque étape
+
+### Statistiques
+
+Accédez à `/statistiques` pour visualiser :
+- Répartition par ville
+- Profils des visiteurs
+- Tranches d'âge
+- Types de demandes
+- Départements de provenance
+
+## 🔧 API Endpoints
+
+- `GET /api/getAllForms` - Récupère toutes les soumissions
+- `POST /api/saveAnswer` - Sauvegarde une réponse de formulaire
+- `GET /api/statistics` - Récupère les statistiques générales
+
+## 🏙️ Villes disponibles
+
+Les villes sont définies dans `src/data/cities.json` :
+- Annot
+- Colmars-les-Alpes
+- Entrevaux
+- La Palud-sur-Verdon
+- Saint-André-les-Alpes
+
+## 📝 Déploiement
+
+Le projet est configuré pour être déployé sur Vercel avec l'adaptateur `@astrojs/vercel`.
+
+```bash
+npm run build
+```
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créez une branche pour votre fonctionnalité
+3. Commitez vos changements
+4. Pushez vers la branche
+5. Ouvrez une Pull Request
+
+## 📄 License
+
+Ce projet est sous licence MIT.
