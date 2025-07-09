@@ -65,7 +65,7 @@ export async function getStaticPaths() {
         <!-- Question 2 : Tranche d’âge -->
         <p class="text-xl mb-4">Tranche(s) d’âge correspondant :</p>
         <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-2">
-            <template x-for="option in ['18-25', '25-40', '40-60', '60+']">
+            <template x-for="option in ['0-10', '10-18', '18-25', '25-40', '40-60', '60+']">
                 <button 
                     type="button"
                     x-on:click="ageGroups.includes(option) ? ageGroups.splice(ageGroups.indexOf(option), 1) : ageGroups.push(option)"

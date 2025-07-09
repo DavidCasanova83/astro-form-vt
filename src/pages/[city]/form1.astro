@@ -70,7 +70,7 @@ export async function getStaticPaths() {
         <!-- Question 1 : Pays de résidence -->
         <p class="text-xl mb-4">Quel est le pays de résidence ?</p>
         <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
-            <template x-for="option in ['France', 'Belgique', 'Allemagne', 'Italie', 'Pays-Bas', 'Espagne', 'Angleterre', 'Autre']">
+            <template x-for="option in ['France', 'Belgique', 'Allemagne', 'Italie', 'Pays-Bas', 'Suisse', 'Espagne', 'Angleterre', 'Autre']">
                 <button 
                     type="button"
                     x-on:click="country = option; if(option !== 'Autre') otherCountry = ''"
@@ -121,40 +121,45 @@ export async function getStaticPaths() {
             </div>
         </template>
 
-                <!-- Séparateur -->
-                <hr class="my-4 border-t border-gray-300">
+        <div>
+            <!-- Séparateur -->
+            <hr class="my-4 border-t border-gray-300">
 
-        <!-- Champ Email -->
-        <div class="mt-6">
-            <label class="block text-lg font-semibold mb-2">Informations utilisateurs</label>
-            <input 
-                type="email" 
-                x-model="email" 
-                class="border p-3 rounded w-full text-gray-700 focus:ring focus:ring-blue-200 focus:outline-none" 
-                placeholder="contact@verdontourisme.com" required>
+            <!-- Champ Email -->
+            <div class="mt-6">
+                <label class="block text-lg font-semibold mb-2">Informations utilisateurs</label>
+                <input 
+                    type="email" 
+                    x-model="email" 
+                    class="border p-3 rounded w-full text-gray-700 focus:ring focus:ring-blue-200 focus:outline-none" 
+                    placeholder="contact@verdontourisme.com" required>
+            </div>
+
+
+
+            <!-- Consentement à l'inscription newsletter -->
+            <div class="bg-gray-100 p-4 rounded-lg mt-4">
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" x-model="consentNewsletter" class="w-6 h-6 text-blue-500 border-gray-300 rounded">
+                    <span class="text-sm text-gray-700 leading-tight">
+                        La personne souhaite recevoir la <span class="font-extrabold">newsletter</span> et des informations sur les événements.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Consentement au traitement des données -->
+            <div class="bg-gray-100 p-4 rounded-lg mt-2">
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" x-model="consentDataProcessing" class="w-6 h-6 text-blue-500 border-gray-300 rounded">
+                    <span class="text-sm text-gray-700 leading-tight">
+                        J'accepte que mes données soient traitées conformément à la <a href="/politique-confidentialite" class="text-blue-500 hover:underline">politique de confidentialité RGPD</a>.
+                    </span>
+                </label>
+            </div>
+
         </div>
+      
 
-
-
-        <!-- Consentement à l'inscription newsletter -->
-        <div class="bg-gray-100 p-4 rounded-lg mt-4">
-            <label class="flex items-start space-x-3">
-                <input type="checkbox" x-model="consentNewsletter" class="w-6 h-6 text-blue-500 border-gray-300 rounded">
-                <span class="text-sm text-gray-700 leading-tight">
-                    La personne souhaite recevoir la <span class="font-extrabold">newsletter</span> et des informations sur les événements.
-                </span>
-            </label>
-        </div>
-
-        <!-- Consentement au traitement des données -->
-        <div class="bg-gray-100 p-4 rounded-lg mt-2">
-            <label class="flex items-start space-x-3">
-                <input type="checkbox" x-model="consentDataProcessing" class="w-6 h-6 text-blue-500 border-gray-300 rounded">
-                <span class="text-sm text-gray-700 leading-tight">
-                    J'accepte que mes données soient traitées conformément à la <a href="/politique-confidentialite" class="text-blue-500 hover:underline">politique de confidentialité RGPD</a>.
-                </span>
-            </label>
-        </div>
 
         <!-- Bouton de validation -->
         <button
