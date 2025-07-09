@@ -70,7 +70,7 @@ export async function getStaticPaths() {
         <!-- Question 1 : Pays de résidence -->
         <p class="text-xl mb-4">Quel est le pays de résidence ?</p>
         <div class="flex flex-wrap justify-start gap-2 md:gap-4 mb-4">
-            <template x-for="option in ['France', 'Belgique', 'Allemagne', 'Italie', 'Pays-Bas', 'Espagne', 'Angleterre', 'Autre']">
+            <template x-for="option in ['France', 'Belgique', 'Allemagne', 'Italie', 'Pays-Bas', 'Suisse', 'Espagne', 'Angleterre', 'Autre']">
                 <button 
                     type="button"
                     x-on:click="country = option; if(option !== 'Autre') otherCountry = ''"
