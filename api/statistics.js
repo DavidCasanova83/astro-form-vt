@@ -13,15 +13,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Exécute une requête de scan pour compter le nombre d'entrées
-    const command = new ScanCommand({
-      TableName: process.env.DYNAMODB_TABLE,
-      Select: "COUNT", // Permet de récupérer uniquement le nombre d'entrées
-    });
+    let totalCount = 0;
+    let lastEvaluatedKey = null;
+    
+    do {
+      // Scan avec pagination pour compter **toutes** les entrées
+      const command = new ScanCommand({
+        TableName: process.env.DYNAMODB_TABLE,
+        Select: "COUNT",
+        ExclusiveStartKey: lastEvaluatedKey
+      });
 
-    const result = await ddbDocClient.send(command);
+      const result = await ddbDocClient.send(command);
+      
+      // Ajouter le count de cette page
+      totalCount += result.Count || 0;
+      
+      // Continuer si il y a encore des données
+      lastEvaluatedKey = result.LastEvaluatedKey;
+      
+    } while (lastEvaluatedKey);
 
-    res.status(200).json({ success: true, count: result.Count });
+    console.log(`Total count récupéré: ${totalCount}`);
+    res.status(200).json({ success: true, count: totalCount });
   } catch (error) {
     console.error("Erreur DynamoDB :", error);
     res.status(500).json({ success: false, error: error.message });
