@@ -13,29 +13,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    let allItems = [];
-    let lastEvaluatedKey = null;
+    // Scan récupère **toutes** les entrées de la table DynamoDB
+    const command = new ScanCommand({
+      TableName: process.env.DYNAMODB_TABLE
+    });
 
-    // Boucle de pagination pour récupérer toutes les entrées
-    do {
-      const command = new ScanCommand({
-        TableName: process.env.DYNAMODB_TABLE,
-        ExclusiveStartKey: lastEvaluatedKey
-      });
+    const result = await ddbDocClient.send(command);
 
-      const result = await ddbDocClient.send(command);
-      
-      // Ajouter les items de cette page au tableau total
-      if (result.Items) {
-        allItems = allItems.concat(result.Items);
-      }
-      
-      // Mettre à jour la clé pour la prochaine page
-      lastEvaluatedKey = result.LastEvaluatedKey;
-      
-    } while (lastEvaluatedKey);
-
-    res.status(200).json({ success: true, data: allItems });
+    res.status(200).json({ success: true, data: result.Items });
   } catch (error) {
     console.error("Erreur DynamoDB :", error);
     res.status(500).json({ success: false, error: error.message });
