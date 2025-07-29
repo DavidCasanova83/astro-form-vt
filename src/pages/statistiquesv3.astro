@@ -1,0 +1,805 @@
+---
+import Header from '../components/Header.astro';
+import "../styles/global.css";
+---
+
+<html lang="fr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <title>Statistiques V3</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-50: #f0f9ff;
+            --primary-500: #3b82f6;
+            --primary-600: #2563eb;
+            --primary-700: #1d4ed8;
+            --success-500: #10b981;
+            --warning-500: #f59e0b;
+            --error-500: #ef4444;
+        }
+        
+        .chart-container {
+            transition: all 0.3s ease;
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .loading-skeleton {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .export-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <Header />
+    
+    <div class="container mx-auto px-4 py-8 max-w-7xl"
+        x-data="{
+            // Data states
+            count: 0,
+            forms: [],
+            cities: {},
+            profiles: {},
+            contactModes: {},
+            departments: {},
+            ageGroups: {},
+            specificRequests: {},
+            generalRequests: {},
+            otherRequests: {},
+            
+            // Loading and error states
+            isLoading: true,
+            isProcessing: false,
+            hasError: false,
+            errorMessage: '',
+            loadingStep: 'Initialisation...',
+            chartsLoaded: false,
+            
+            // Filters
+            filters: {
+                dateRange: '30d',
+                city: 'all',
+                profile: 'all',
+                department: 'all'
+            },
+            
+            // Chart instances for cleanup
+            chartInstances: {},
+            
+            // Computed properties
+            get totalCities() {
+                return Object.keys(this.cities).length;
+            },
+            
+            get totalProfiles() {
+                return Object.keys(this.profiles).length;
+            },
+            
+            get totalDepartments() {
+                return Object.keys(this.departments).length;
+            },
+            
+            get averagePerCity() {
+                const cityCount = this.totalCities;
+                return cityCount > 0 ? Math.round(this.count / cityCount) : 0;
+            },
+            
+            get filteredForms() {
+                return this.forms.filter(form => {
+                    if (this.filters.city !== 'all' && form.city !== this.filters.city) return false;
+                    if (this.filters.profile !== 'all' && form.profile !== this.filters.profile) return false;
+                    if (this.filters.department !== 'all' && form.department !== this.filters.department) return false;
+                    return true;
+                });
+            },
+            
+            async fetchData() {
+                this.isLoading = true;
+                this.hasError = false;
+                this.errorMessage = '';
+                this.loadingStep = 'Récupération des statistiques...';
+                
+                try {
+                    // Fetch statistics count
+                    const statsResponse = await fetch('/api/statistics');
+                    if (!statsResponse.ok) {
+                        throw new Error(`Erreur HTTP ${statsResponse.status}: ${statsResponse.statusText}`);
+                    }
+                    
+                    const statsData = await statsResponse.json();
+                    console.log('Données statistiques:', statsData);
+                    
+                    if (statsData.success) {
+                        this.count = statsData.count;
+                    } else {
+                        throw new Error(statsData.error || 'Erreur inconnue lors de la récupération des statistiques');
+                    }
+                    
+                    this.loadingStep = 'Récupération des formulaires...';
+                    
+                    // Fetch all forms data
+                    const formsResponse = await fetch('/api/getAllForms');
+                    if (!formsResponse.ok) {
+                        throw new Error(`Erreur HTTP ${formsResponse.status}: ${formsResponse.statusText}`);
+                    }
+                    
+                    const formsData = await formsResponse.json();
+                    console.log('Toutes les données des formulaires:', formsData);
+                    
+                    if (formsData.success) {
+                        this.forms = formsData.data || [];
+                        this.loadingStep = 'Traitement des données...';
+                        await this.processData();
+                    } else {
+                        throw new Error(formsData.error || 'Erreur inconnue lors de la récupération des formulaires');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erreur lors du chargement des données:', error);
+                    this.hasError = true;
+                    this.errorMessage = error.message || 'Une erreur inattendue s\\'est produite';
+                    this.isLoading = false;
+                }
+            },
+            
+            async processData() {
+                this.isProcessing = true;
+                
+                try {
+                    // Reset data objects
+                    this.cities = {};
+                    this.profiles = {};
+                    this.contactModes = {};
+                    this.departments = {};
+                    this.ageGroups = {};
+                    this.specificRequests = {};
+                    this.generalRequests = {};
+                    this.otherRequests = {};
+                    
+                    // Process forms data with validation
+                    const formsToProcess = this.filteredForms;
+                    
+                    formsToProcess.forEach(form => {
+                        if (!form) return;
+                        
+                        // Safe property access with fallbacks
+                        if (form.city) this.cities[form.city] = (this.cities[form.city] || 0) + 1;
+                        if (form.profile) this.profiles[form.profile] = (this.profiles[form.profile] || 0) + 1;
+                        if (form.contactMode) this.contactModes[form.contactMode] = (this.contactModes[form.contactMode] || 0) + 1;
+                        if (form.department) this.departments[form.department] = (this.departments[form.department] || 0) + 1;
+                        if (form.otherRequest) this.otherRequests[form.otherRequest] = (this.otherRequests[form.otherRequest] || 0) + 1;
+                        
+                        // Handle arrays safely
+                        if (Array.isArray(form.ageGroups)) {
+                            form.ageGroups.forEach(age => {
+                                if (age) this.ageGroups[age] = (this.ageGroups[age] || 0) + 1;
+                            });
+                        }
+                        
+                        if (Array.isArray(form.specificRequests)) {
+                            form.specificRequests.forEach(request => {
+                                if (request) this.specificRequests[request] = (this.specificRequests[request] || 0) + 1;
+                            });
+                        }
+                        
+                        if (Array.isArray(form.generalRequests)) {
+                            form.generalRequests.forEach(request => {
+                                if (request) this.generalRequests[request] = (this.generalRequests[request] || 0) + 1;
+                            });
+                        }
+                    });
+                    
+                    this.loadingStep = 'Génération des graphiques...';
+                    await this.renderCharts();
+                    
+                } catch (error) {
+                    console.error('Erreur lors du traitement des données:', error);
+                    this.hasError = true;
+                    this.errorMessage = 'Erreur lors du traitement des données';
+                    this.isLoading = false;
+                    this.isProcessing = false;
+                }
+            },
+            
+            async renderCharts() {
+                try {
+                    // Cleanup existing charts
+                    Object.values(this.chartInstances).forEach(chart => {
+                        if (chart) chart.destroy();
+                    });
+                    this.chartInstances = {};
+                    
+                    // Chart configuration
+                    const chartDefaults = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                enabled: true,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#3b82f6',
+                                borderWidth: 1
+                            }
+                        },
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeInOutQuart'
+                        }
+                    };
+                    
+                    setTimeout(() => {
+                        try {
+                            console.log('Début du rendu des graphiques...');
+                            console.log('Données pour les graphiques:', {
+                                cities: this.cities,
+                                profiles: this.profiles,
+                                departments: this.departments,
+                                ageGroups: this.ageGroups,
+                                specificRequests: this.specificRequests,
+                                generalRequests: this.generalRequests,
+                                otherRequests: this.otherRequests
+                            });
+                            
+                            // City Chart
+                            const cityCanvas = document.getElementById('cityChart');
+                            if (cityCanvas) {
+                                console.log('Rendu du graphique des villes...');
+                                this.chartInstances.city = new Chart(cityCanvas, {
+                                type: 'bar',
+                                data: {
+                                    labels: Object.keys(this.cities),
+                                    datasets: [{
+                                        label: 'Nombre de formulaires',
+                                        data: Object.values(this.cities),
+                                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                        borderColor: 'rgba(59, 130, 246, 1)',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...chartDefaults,
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Profile Chart
+                        const profileCanvas = document.getElementById('profileChart');
+                        if (profileCanvas) {
+                            this.chartInstances.profile = new Chart(profileCanvas, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: Object.keys(this.profiles),
+                                    datasets: [{
+                                        data: Object.values(this.profiles),
+                                        backgroundColor: [
+                                            'rgba(59, 130, 246, 0.8)',
+                                            'rgba(16, 185, 129, 0.8)',
+                                            'rgba(245, 158, 11, 0.8)',
+                                            'rgba(239, 68, 68, 0.8)',
+                                            'rgba(139, 92, 246, 0.8)'
+                                        ],
+                                        borderWidth: 2,
+                                        borderColor: '#fff'
+                                    }]
+                                },
+                                options: {
+                                    ...chartDefaults,
+                                    cutout: '50%'
+                                }
+                            });
+                        }
+                        
+                        // Department Chart
+                        const departmentCanvas = document.getElementById('departmentChart');
+                        if (departmentCanvas) {
+                            this.chartInstances.department = new Chart(departmentCanvas, {
+                                type: 'bar',
+                                data: {
+                                    labels: Object.keys(this.departments),
+                                    datasets: [{
+                                        label: 'Nombre de visiteurs',
+                                        data: Object.values(this.departments),
+                                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                                        borderColor: 'rgba(16, 185, 129, 1)',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...chartDefaults,
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Age Group Chart
+                        const ageCanvas = document.getElementById('ageGroupChart');
+                        if (ageCanvas) {
+                            this.chartInstances.age = new Chart(ageCanvas, {
+                                type: 'pie',
+                                data: {
+                                    labels: Object.keys(this.ageGroups),
+                                    datasets: [{
+                                        data: Object.values(this.ageGroups),
+                                        backgroundColor: [
+                                            'rgba(245, 158, 11, 0.8)',
+                                            'rgba(59, 130, 246, 0.8)',
+                                            'rgba(16, 185, 129, 0.8)',
+                                            'rgba(239, 68, 68, 0.8)'
+                                        ],
+                                        borderWidth: 2,
+                                        borderColor: '#fff'
+                                    }]
+                                },
+                                options: chartDefaults
+                            });
+                        }
+                        
+                        // Specific Requests Chart
+                        const specificCanvas = document.getElementById('specificRequestsChart');
+                        if (specificCanvas) {
+                            this.chartInstances.specific = new Chart(specificCanvas, {
+                                type: 'bar',
+                                data: {
+                                    labels: Object.keys(this.specificRequests),
+                                    datasets: [{
+                                        label: 'Demandes spécifiques',
+                                        data: Object.values(this.specificRequests),
+                                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                                        borderColor: 'rgba(245, 158, 11, 1)',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...chartDefaults,
+                                    indexAxis: 'y',
+                                    scales: {
+                                        x: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // General Requests Chart
+                        const generalCanvas = document.getElementById('generalRequestsChart');
+                        if (generalCanvas) {
+                            this.chartInstances.general = new Chart(generalCanvas, {
+                                type: 'bar',
+                                data: {
+                                    labels: Object.keys(this.generalRequests),
+                                    datasets: [{
+                                        label: 'Demandes générales',
+                                        data: Object.values(this.generalRequests),
+                                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                        borderColor: 'rgba(239, 68, 68, 1)',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...chartDefaults,
+                                    indexAxis: 'y',
+                                    scales: {
+                                        x: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Other Requests Chart
+                        const otherCanvas = document.getElementById('otherRequestsChart');
+                        if (otherCanvas) {
+                            this.chartInstances.other = new Chart(otherCanvas, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: Object.keys(this.otherRequests),
+                                    datasets: [{
+                                        data: Object.values(this.otherRequests),
+                                        backgroundColor: [
+                                            'rgba(139, 92, 246, 0.8)',
+                                            'rgba(236, 72, 153, 0.8)',
+                                            'rgba(34, 197, 94, 0.8)'
+                                        ],
+                                        borderWidth: 2,
+                                        borderColor: '#fff'
+                                    }]
+                                },
+                                options: {
+                                    ...chartDefaults,
+                                    cutout: '50%'
+                                }
+                            });
+                        }
+                        
+                            // Mark charts as loaded
+                            console.log('Tous les graphiques ont été rendus avec succès');
+                            this.chartsLoaded = true;
+                            this.isLoading = false;
+                            this.isProcessing = false;
+                            this.loadingStep = 'Terminé';
+                            
+                        } catch (chartError) {
+                            console.error('Erreur lors du rendu des graphiques individuels:', chartError);
+                            // Continue même si certains graphiques échouent
+                            this.chartsLoaded = true;
+                            this.isLoading = false;
+                            this.isProcessing = false;
+                            this.loadingStep = 'Terminé avec erreurs';
+                        }
+                        
+                    }, 800);
+                    
+                } catch (error) {
+                    console.error('Erreur lors du rendu des graphiques:', error);
+                    this.hasError = true;
+                    this.errorMessage = 'Erreur lors de la génération des graphiques';
+                    this.isLoading = false;
+                    this.isProcessing = false;
+                }
+            },
+            
+            retryFetch() {
+                this.fetchData();
+            },
+            
+            applyFilters() {
+                this.processData();
+            },
+            
+            resetFilters() {
+                this.filters = {
+                    dateRange: '30d',
+                    city: 'all',
+                    profile: 'all',
+                    department: 'all'
+                };
+                this.processData();
+            },
+            
+            exportData(format) {
+                const data = {
+                    summary: {
+                        totalForms: this.count,
+                        totalCities: this.totalCities,
+                        totalProfiles: this.totalProfiles,
+                        totalDepartments: this.totalDepartments,
+                        averagePerCity: this.averagePerCity,
+                        exportDate: new Date().toISOString()
+                    },
+                    breakdown: {
+                        cities: this.cities,
+                        profiles: this.profiles,
+                        departments: this.departments,
+                        ageGroups: this.ageGroups,
+                        specificRequests: this.specificRequests,
+                        generalRequests: this.generalRequests,
+                        otherRequests: this.otherRequests
+                    }
+                };
+                
+                if (format === 'json') {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `statistiques-${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else if (format === 'csv') {
+                    // Simple CSV export for cities data
+                    let csv = 'Ville,Nombre de formulaires\\n';
+                    Object.entries(this.cities).forEach(([city, count]) => {
+                        csv += `${city},${count}\\n`;
+                    });
+                    
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `statistiques-villes-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            }
+        }"
+        x-init="fetchData()">
+        
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Tableau de Bord Statistiques V3</h1>
+            <p class="text-gray-600">Analyse complète des données des formulaires</p>
+        </div>
+        
+        <!-- Loading State -->
+        <div x-show="isLoading" class="flex flex-col items-center justify-center py-16">
+            <div class="relative">
+                <div class="animate-spin rounded-full h-20 w-20 border-b-4 border-green-700"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-10 h-10 bg-green-700 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+            <p class="text-lg font-medium text-gray-600 mt-6" x-text="loadingStep"></p>
+            <div class="w-full max-w-md bg-gray-200 rounded-full h-3 mt-4">
+                <div class="bg-green-700 h-3 rounded-full transition-all duration-500" 
+                     x-bind:style="'width: ' + (loadingStep.includes('statistiques') ? '25%' : 
+                                                 loadingStep.includes('formulaires') ? '50%' : 
+                                                 loadingStep.includes('Traitement') ? '75%' : 
+                                                 loadingStep.includes('graphiques') ? '100%' : '10%')"></div>
+            </div>
+        </div>
+        
+        <!-- Error State -->
+        <div x-show="hasError" class="bg-red-50 border border-red-200 rounded-xl p-8 mb-8">
+            <div class="flex items-center mb-6">
+                <svg class="w-8 h-8 text-red-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <h2 class="text-xl font-bold text-red-800">Erreur de chargement</h2>
+            </div>
+            <p class="text-red-700 mb-6 text-lg" x-text="errorMessage"></p>
+            <button @click="retryFetch()" 
+                    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                Réessayer
+            </button>
+        </div>
+        
+        <!-- Controls Section -->
+        <div x-show="!isLoading && !hasError" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <select x-model="filters.city" @change="applyFilters()" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">Tous les bureaux</option>
+                        <template x-for="city in Object.keys(cities)" :key="city">
+                            <option x-text="city" :value="city"></option>
+                        </template>
+                    </select>
+                    
+                    <select x-model="filters.profile" @change="applyFilters()" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">Tous les profils</option>
+                        <template x-for="profile in Object.keys(profiles)" :key="profile">
+                            <option x-text="profile" :value="profile"></option>
+                        </template>
+                    </select>
+                    
+                    <button @click="resetFilters()" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Réinitialiser
+                    </button>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button @click="exportData('json')" 
+                            class="export-btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
+                        Export JSON
+                    </button>
+                    <button @click="exportData('csv')" 
+                            class="export-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium">
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- KPI Cards -->
+        <div x-show="!isLoading && !hasError" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Total Formulaires</p>
+                        <p class="text-3xl font-bold text-gray-900" x-text="count"></p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Bureaux</p>
+                        <p class="text-3xl font-bold text-gray-900" x-text="totalCities"></p>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Profils Différents</p>
+                        <p class="text-3xl font-bold text-gray-900" x-text="totalProfiles"></p>
+                    </div>
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">Moyenne par Ville</p>
+                        <p class="text-3xl font-bold text-gray-900" x-text="averagePerCity"></p>
+                    </div>
+                    <div class="p-3 bg-orange-100 rounded-full">
+                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Grid -->
+        <div x-show="!isLoading && !hasError" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- City Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 chart-container">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Répartition par Ville</h2>
+                    <span class="text-sm text-gray-500">Nombre de formulaires</span>
+                </div>
+                <div class="relative h-80">
+                    <div x-show="isProcessing" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    </div>
+                    <canvas id="cityChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            
+            <!-- Profile Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 chart-container">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Répartition par Profil</h2>
+                    <span class="text-sm text-gray-500">Types de visiteurs</span>
+                </div>
+                <div class="relative h-80">
+                    <div x-show="isProcessing" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    </div>
+                    <canvas id="profileChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            
+            <!-- Department Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 chart-container">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Répartition par Département</h2>
+                    <span class="text-sm text-gray-500">Provenance géographique</span>
+                </div>
+                <div class="relative h-80">
+                    <div x-show="isProcessing" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    </div>
+                    <canvas id="departmentChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            
+            <!-- Age Group Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 chart-container">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Répartition par Âge</h2>
+                    <span class="text-sm text-gray-500">Tranches d'âge</span>
+                </div>
+                <div class="relative h-80">
+                    <div x-show="isProcessing" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    </div>
+                    <canvas id="ageGroupChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            
+            <!-- Specific Requests Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 chart-container lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Demandes Spécifiques</h2>
+                    <span class="text-sm text-gray-500">Par ville</span>
+                </div>
+                <div class="relative h-80">
+                    <div x-show="isProcessing" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    </div>
+                    <canvas id="specificRequestsChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            
+            <!-- General Requests Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 chart-container lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Demandes Générales</h2>
+                    <span class="text-sm text-gray-500">Services demandés</span>
+                </div>
+                <div class="relative h-80">
+                    <div x-show="isProcessing" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    </div>
+                    <canvas id="generalRequestsChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            
+            <!-- Other Requests Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 chart-container lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Autres Demandes</h2>
+                    <span class="text-sm text-gray-500">Demandes personnalisées</span>
+                </div>
+                <div class="relative h-80">
+                    <div x-show="isProcessing" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    </div>
+                    <canvas id="otherRequestsChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div x-show="!isLoading && !hasError" class="mt-12 text-center text-gray-500">
+            <p>Dernière mise à jour : <span x-text="new Date().toLocaleString('fr-FR')"></span></p>
+            <p class="mt-2">Données exportées depuis les formulaires récoltés dans les bureaux d'accueil touristique de l'OTI Verdon Tourisme.</p>
+        </div>
+    </div>
+</body>
+</html>
